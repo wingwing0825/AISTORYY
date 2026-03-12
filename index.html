@@ -1,0 +1,3553 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>筆塚 · 小說潤稿助手</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700&family=Cinzel+Decorative&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 水墨風 */
+  --bg:#faf9f6;        /* 宣紙白 */
+  --bg2:#f3f1ec;
+  --bg3:#eae7de;
+  --panel:#f6f5f1;
+  --line:#d6d2c6;
+  --line2:#c0bbae;
+  --line3:#a8a298;
+  --red:#8c1a28;       /* 朱砂紅 */
+  --redl:#b02234;
+  --amber:#6b4a0a;     /* 赭石 */
+  --amberl:#8c6318;
+  --teal:#0e3d2a;      /* 石綠 */
+  --tealx:#1a5c42;
+  --purple:#3a1a5c;
+  --purplex:#5a3888;
+  --gold:#6b5200;
+  --ink:#0a0806;       /* 墨黑 */
+  --ink2:#1a1612;
+  --ink3:#2e2a20;
+  --ink4:#56503e;
+  --ink5:#8a8272;
+  --accent:#8c1a28;    /* 朱砂 */
+  --paper:#faf9f6;
+  --brush:#0a0806;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Noto Serif TC',serif;background:var(--paper);color:var(--ink)} ::selection{background:rgba(140,26,40,0.18)}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{height:48px;flex-shrink:0;display:flex;align-items:center;padding:0 20px;gap:0;background:#fff;border-bottom:2px solid var(--ink);position:relative;}
+.logo{font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:6px;margin-right:24px;flex-shrink:0;line-height:1;}
+.logo small{font-size:10px;color:var(--ink4);letter-spacing:2px;margin-left:8px;vertical-align:middle;font-family:'Noto Serif TC',serif;}
+.navtabs{display:flex;gap:0;flex:1;overflow-x:auto}
+.navtabs::-webkit-scrollbar{display:none}
+.ntab{
+  padding:0 14px;height:46px;line-height:46px;
+  font-size:12px;letter-spacing:2px;color:var(--ink4);font-family:'Noto Serif TC',serif;
+  border:none;background:none;cursor:pointer;
+  border-bottom:3px solid transparent;
+  font-family:'Noto Serif TC',serif;white-space:nowrap;
+  transition:color 0.15s;
+}
+.ntab:hover{color:var(--ink)}
+.ntab.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600;letter-spacing:2px}
+.topbtns{display:flex;gap:6px;flex-shrink:0}
+.tbtn{
+  padding:5px 10px;font-size:11px;letter-spacing:1px;
+  color:var(--ink4);border:1px solid var(--line2);
+  background:rgba(255,255,255,0.03);cursor:pointer;
+  border-radius:3px;font-family:'Noto Serif TC',serif;transition:all 0.15s;
+}
+.tbtn:hover{color:var(--ink2);background:rgba(255,255,255,0.06)}
+.tbtn.active{color:var(--amberl);border-color:var(--amber);background:rgba(200,120,10,0.1)}
+
+/* ── WORKSPACE ── */
+.ws{flex:1;overflow:hidden;position:relative}
+/* Ink wash watermark on empty pages */
+.page-ink-bg{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image: radial-gradient(ellipse 60% 40% at 20% 80%, rgba(0,0,0,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 80% 20%, rgba(0,0,0,0.03) 0%, transparent 70%);
+}
+.page{display:none;height:100%;flex-direction:column}
+.page.on{display:flex}
+
+/* ── SPLIT ── */
+.split{display:flex;flex:1;overflow:hidden}
+.lpanel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;background:#fff;border-right:1px solid var(--line);}
+.rpanel{width:360px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;min-height:0;background:var(--bg);}
+
+/* ── SUBTABS ── */
+.subtabs{
+  display:flex;gap:0;border-bottom:1px solid var(--line);
+  background:var(--panel);flex-shrink:0;
+}
+.stab{
+  padding:0 16px;height:38px;line-height:38px;
+  font-size:11px;letter-spacing:1.5px;color:var(--ink5);
+  border:none;background:none;cursor:pointer;
+  border-bottom:3px solid transparent;
+  font-family:'Noto Serif TC',serif;white-space:nowrap;
+  transition:all 0.15s;
+}
+.stab:hover{color:var(--ink4)}
+.stab.on{color:var(--amberl);border-bottom-color:var(--amber)}
+
+/* ── FAREA ── */
+.farea{
+  flex:1;overflow-y:auto;padding:14px 16px;
+  display:flex;flex-direction:column;gap:8px;
+  min-height:0;
+}
+.farea::-webkit-scrollbar{width:4px}
+.farea::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+/* ── FORM ── */
+.slbl{
+  font-size:10px;color:var(--ink4);letter-spacing:2px;
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.slbl::after{content:'';flex:1;height:1px;background:var(--line)}
+.frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.flbl{font-size:11px;color:var(--ink4);letter-spacing:1px;white-space:nowrap}
+select.fsel{
+  padding:4px 8px;font-size:12px;background:#fff;color:var(--ink2);
+  border:1px solid var(--line2);border-radius:0;
+  font-family:'Noto Serif TC',serif;cursor:pointer;outline:none;
+}
+select.fsel:focus{border-color:var(--ink3);}
+textarea.ta{
+  width:100%;resize:none;outline:none;
+  background:rgba(255,255,255,0.7);color:var(--ink);
+  border:1px solid var(--line2);border-radius:2px;
+  padding:10px 12px;font-size:13px;line-height:1.9;
+  font-family:'Noto Serif TC',serif;
+  flex:1;min-height:100px;transition:border-color 0.15s;
+}
+textarea.ta:focus{border-color:var(--ink3);border-width:1.5px;}
+textarea.ta::placeholder{color:var(--ink5)}
+textarea.ta.sm{min-height:70px;flex:none}
+textarea.ta.xs{min-height:50px;flex:none}
+input.inp{
+  flex:1;padding:5px 8px;font-size:12px;
+  background:#fff;color:var(--ink2);
+  border:1px solid var(--line2);border-radius:2px;
+  font-family:'Noto Serif TC',serif;outline:none;
+}
+input.inp:focus{border-color:var(--amber)}
+input.inp::placeholder{color:var(--ink5)}
+.divider{height:1px;background:var(--line);flex-shrink:0}
+.brow{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:7px 14px;font-size:11px;letter-spacing:1.5px;
+  border-radius:2px;cursor:pointer;font-family:'Noto Serif TC',serif;
+  border:1px solid;transition:all 0.15s;white-space:nowrap;
+}
+.btn-p{background:rgba(140,26,40,0.07);border-color:var(--red);color:var(--red);border-radius:0;letter-spacing:2px;}
+.btn-p:hover{background:rgba(140,26,40,0.14)}
+.btn-a{background:rgba(200,120,10,0.1);border-color:var(--amber);color:var(--amberl)}
+.btn-a:hover{background:rgba(200,120,10,0.22)}
+.btn-g{background:rgba(255,255,255,0.03);border-color:var(--line2);color:var(--ink4)}
+.btn-g:hover{background:rgba(255,255,255,0.07);color:var(--ink3)}
+.btn-t{background:rgba(26,107,90,0.1);border-color:var(--teal);color:var(--tealx)}
+.btn-t:hover{background:rgba(26,107,90,0.22)}
+.btn.sm{padding:4px 9px;font-size:10px}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* ── CHIPS ── */
+.chips{display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0}
+.chip{
+  padding:4px 10px;font-size:11px;letter-spacing:1px;border-radius:12px;
+  cursor:pointer;border:1px solid var(--line2);color:var(--ink4);
+  background:transparent;font-family:'Noto Serif TC',serif;transition:all 0.15s;
+}
+.chip:hover{color:var(--ink3);border-color:var(--line3)}
+.chip.on{background:rgba(122,16,32,0.08);border-color:var(--red);color:var(--red)}
+
+/* ── RIGHT PANEL ── */
+.rhdr{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1.5px solid var(--ink3);flex-shrink:0;background:var(--bg2);}
+.rtitle{font-size:13px;color:var(--ink);letter-spacing:3px;font-weight:600;}
+.rct{font-size:10px;color:var(--ink4);margin-left:auto;letter-spacing:1.5px;}
+.rbar{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;border-bottom:1px solid var(--line);
+  flex-shrink:0;background:var(--bg2);border-top:1px solid var(--line);flex-wrap:wrap;
+}
+.rlist{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-height:0}
+.rlist::-webkit-scrollbar{width:5px}
+.rlist::-webkit-scrollbar-track{background:transparent}
+.rlist::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+.rlist::-webkit-scrollbar-thumb:hover{background:var(--ink5)}
+
+/* ── ANNOTATED ── */
+.ann-body{
+  flex:1;overflow-y:auto;padding:24px 32px;
+  font-size:15px;line-height:2.3;min-height:0;background:#fff;letter-spacing:1px;
+}
+.ann-body::-webkit-scrollbar{width:5px}
+.ann-body::-webkit-scrollbar-track{background:transparent}
+.ann-body::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+.ann-body::-webkit-scrollbar-thumb:hover{background:var(--ink5)}
+span.ann{cursor:pointer;border-radius:2px;border-bottom:2px solid;transition:background 0.1s}
+span.ann.red{border-bottom-color:var(--redl);color:var(--redl)}
+span.ann.amber{border-bottom-color:var(--amberl);color:var(--amberl)}
+span.ann.teal{border-bottom-color:var(--tealx);color:var(--tealx)}
+span.ann.purple{border-bottom-color:var(--purplex);color:var(--purplex)}
+span.ann:hover,span.ann.hi{background:rgba(155,35,53,0.08)}
+span.ann.done{opacity:0.4;border-bottom-style:dashed}
+span.ann.lit{animation:litup 1.5s ease}
+@keyframes litup{0%,100%{background:transparent}35%{background:rgba(200,120,10,0.28)}}
+
+/* ── ISSUE CARDS ── */
+.ic{
+  padding:8px 10px;border-radius:3px;cursor:pointer;
+  border:1px solid var(--line);background:#fff;border-radius:0;
+  transition:all 0.15s;
+}
+.ic:hover{border-color:var(--line2);background:#fafaf8}
+.ic.red{border-left:4px solid var(--red)}
+.ic.amber{border-left:4px solid var(--amber)}
+.ic.teal{border-left:4px solid var(--teal)}
+.ic.purple{border-left:4px solid var(--purple)}
+.ic.done{opacity:0.4}
+.ict{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.icn{font-size:10px;color:var(--ink5)}
+.icb{font-size:10px;color:var(--ink4);letter-spacing:1px;border:1px solid var(--line2);padding:1px 5px;border-radius:8px}
+.icex{font-size:12px;color:var(--ink3);margin-bottom:3px}
+.icex mark{background:rgba(200,120,10,0.15);color:var(--amberl);border-radius:1px;padding:0 2px}
+.icd{font-size:11px;color:var(--ink5);line-height:1.5}
+
+/* ── POPUP ── */
+.popup{
+  display:none;position:fixed;z-index:9999;width:340px;
+  background:#fff;border:1px solid var(--line2);border-radius:4px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+}
+.popup.on{display:block}
+/* User reply in popup */
+.pop-reply-wrap{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.pop-reply-lbl{font-size:10px;color:var(--ink5);letter-spacing:1.5px;margin-bottom:4px}
+.pop-reply-row{display:flex;gap:5px;align-items:flex-end}
+.pop-reply-ta{
+  flex:1;resize:none;outline:none;background:#fff;color:var(--ink2);
+  border:1px solid var(--line2);border-radius:2px;
+  padding:5px 7px;font-size:12px;line-height:1.6;min-height:40px;
+  font-family:'Noto Serif TC',serif;transition:border-color 0.15s;
+}
+.pop-reply-ta:focus{border-color:var(--amber)}
+.pop-reply-ta::placeholder{color:var(--ink5)}
+.pop-reply-btn{
+  padding:5px 8px;font-size:10px;letter-spacing:1px;
+  background:rgba(200,120,10,0.12);border:1px solid var(--amber);
+  color:var(--amberl);border-radius:2px;cursor:pointer;
+  font-family:'Noto Serif TC',serif;transition:all 0.15s;white-space:nowrap;flex-shrink:0;
+}
+.pop-reply-btn:hover{background:rgba(200,120,10,0.25)}
+.pop-reply-result{
+  margin-top:6px;font-size:12px;color:var(--ink3);line-height:1.7;
+  background:rgba(26,74,58,0.05);border-left:2px solid var(--teal);
+  padding:5px 8px;border-radius:0 2px 2px 0;display:none;
+}
+.pop-reply-result.show{display:block}
+.pophd{padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+.popbdg{padding:2px 7px;border-radius:10px;font-size:10px;letter-spacing:1px}
+.popbdg.red{background:rgba(192,57,43,0.2);color:var(--redl);border:1px solid rgba(192,57,43,0.35)}
+.popbdg.amber{background:rgba(200,120,10,0.2);color:var(--amberl);border:1px solid rgba(200,120,10,0.35)}
+.popbdg.teal{background:rgba(26,107,90,0.2);color:var(--tealx);border:1px solid rgba(26,107,90,0.35)}
+.popbdg.purple{background:rgba(122,70,170,0.2);color:var(--purplex);border:1px solid rgba(122,70,170,0.35)}
+.popx{margin-left:auto;background:none;border:none;color:var(--ink5);cursor:pointer;font-size:16px;padding:0;line-height:1;transition:color 0.15s}
+.popx:hover{color:var(--ink3)}
+.popbd{padding:10px 12px}
+.poptxt{font-size:12px;color:var(--ink3);line-height:1.7;margin-bottom:8px}
+.popq{font-size:12px;color:var(--ink2);background:rgba(107,68,0,0.06);border-left:2px solid var(--amber);padding:5px 8px;margin-bottom:8px;border-radius:0 2px 2px 0;display:none}
+.popsugs{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.popsug{display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--line);border-radius:2px;cursor:pointer;background:#fafaf8;transition:all 0.15s}
+.popsug:hover{background:rgba(200,120,10,0.1);border-color:var(--amber)}
+.popsug-n{font-size:10px;color:var(--ink5);width:24px;flex-shrink:0}
+.popsug-t{font-size:13px;color:var(--ink2);font-family:'Noto Serif TC',serif;flex:1}
+.popacts{display:flex;gap:4px}
+.popact{flex:1;padding:5px;border-radius:2px;font-size:10px;letter-spacing:1px;cursor:pointer;border:1px solid;font-family:'Noto Serif TC',serif;transition:all 0.15s}
+.popact.ok{background:rgba(192,57,43,0.12);border-color:var(--red);color:var(--redl)}
+.popact.ok:hover{background:rgba(192,57,43,0.26)}
+.popact.sk{background:rgba(255,255,255,0.02);border-color:var(--line);color:var(--ink5)}
+.popact.sk:hover{background:rgba(255,255,255,0.05);color:var(--ink4)}
+
+/* ── SDIFF ── */
+.sdcard{border:1px solid var(--line);border-radius:3px;overflow:hidden;flex-shrink:0;background:#fff}
+.sdcard-hd{padding:8px 10px;display:flex;align-items:center;gap:8px;background:#f5f3ef;border-bottom:1px solid var(--line);cursor:pointer}
+.sdcard-hd:hover{background:rgba(255,255,255,0.04)}
+.sdcard-orig{font-size:12px;color:var(--ink4);padding:8px 10px;border-bottom:1px solid var(--line);line-height:1.7;display:none}
+.sdcard-orig.show{display:block}
+.sdcard-sugs{padding:6px 10px;display:flex;flex-direction:column;gap:4px;display:none}
+.sdcard-sugs.show{display:flex}
+.sdcard-sug{display:flex;align-items:flex-start;gap:8px;padding:5px 7px;border:1px solid var(--line);border-radius:2px;cursor:pointer;background:rgba(255,255,255,0.01);transition:all 0.15s}
+.sdcard-sug:hover{background:rgba(26,107,90,0.1);border-color:var(--teal)}
+.sdcard-sug-n{font-size:10px;color:var(--ink5);margin-top:2px;flex-shrink:0}
+.sdcard-sug-t{font-size:12px;color:var(--ink2);line-height:1.7}
+
+/* ── CHAR CARD ── */
+.chcard{background:#fff;border:1px solid var(--line2);border-radius:3px;padding:10px;flex-shrink:0}
+.chhd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.chlbl{font-family:'Noto Serif TC',serif;font-size:14px;color:var(--amberl);letter-spacing:2px}
+.chdel{margin-left:auto;background:none;border:none;color:var(--ink5);cursor:pointer;font-size:14px;transition:color 0.15s}
+.chdel:hover{color:var(--redl)}
+.chgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.chgrid label{font-size:10px;color:var(--ink4);display:block;margin-bottom:2px;letter-spacing:1px}
+.addchar{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;background:rgba(200,120,10,0.03);border:1px dashed var(--ink5);border-radius:2px;color:var(--ink5);font-size:11px;cursor:pointer;transition:all 0.2s;font-family:'Noto Serif TC',serif;letter-spacing:1px;flex-shrink:0}
+.addchar:hover{background:rgba(200,120,10,0.1);border-color:var(--amber);color:var(--amberl)}
+
+/* ── DIR CARDS ── */
+.dircard{padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:#fff;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+.dircard:hover{border-color:var(--amber);background:rgba(200,120,10,0.05)}
+.dircard.sel{border-color:var(--amber);background:rgba(200,120,10,0.08)}
+.dirn{font-size:10px;color:var(--ink5);letter-spacing:1px;margin-bottom:3px}
+.dirtitle{font-size:13px;color:var(--amberl);margin-bottom:4px;letter-spacing:1px}
+.dirbody{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:4px}
+.dirtags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.dtag{font-size:10px;padding:1px 6px;border:1px solid var(--line2);border-radius:8px;color:var(--ink4);letter-spacing:1px}
+
+/* ── RWBOX ── */
+.rwbox{background:var(--bg3);border:1px solid var(--line);border-radius:3px;padding:12px;font-size:13px;line-height:2;color:var(--ink);white-space:pre-wrap;flex-shrink:0}
+.esticky{padding:10px 12px;border-top:1px solid var(--line);background:var(--panel);display:none;flex-shrink:0}
+.esticky.on{display:block}
+.esticky button{width:100%;padding:8px;font-size:12px;letter-spacing:2px;background:rgba(192,57,43,0.12);border:1px solid var(--red);color:var(--redl);border-radius:2px;cursor:pointer;font-family:'Noto Serif TC',serif;transition:all 0.15s}
+.esticky button:hover{background:rgba(192,57,43,0.26)}
+
+/* ── EMPTY ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px 16px;text-align:center;flex:1}
+.eseal{width:46px;height:46px;border:1px solid var(--line2);border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:24px;color:var(--ink3)}
+.empty p{font-size:12px;color:var(--ink5);line-height:1.9;letter-spacing:1px}
+
+/* ── STATS ── */
+.statbar{display:flex;gap:12px;padding:7px 12px;border-bottom:1px solid var(--line);background:#f8f6f2;flex-shrink:0;flex-wrap:wrap}
+.st{display:flex;align-items:center;gap:4px;font-size:11px}
+.st .sd{width:7px;height:7px;border-radius:50%}
+.st.r .sd{background:var(--redl)}.st.a .sd{background:var(--amberl)}.st.t .sd{background:var(--tealx)}.st.p .sd{background:var(--purplex)}
+.st span{color:var(--ink3)}.st em{color:var(--ink5);font-style:normal}
+
+/* ── POV ── */
+.pov-opt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border:1px solid var(--line2);border-radius:2px;cursor:pointer;font-size:12px;color:var(--ink3);letter-spacing:1px;min-width:90px;text-align:center;transition:all 0.15s}
+.pov-opt:has(input:checked){border-color:var(--accent);background:rgba(140,26,40,0.06);color:var(--accent)}
+.pov-opt input{display:none}
+.pov-opt span{font-size:12px;font-weight:500}
+.pov-opt small{font-size:9px;color:var(--ink5);letter-spacing:0.5px}
+.pov-opt:has(input:checked) small{color:var(--redl)}
+/* ── IGNORE WORDS ── */
+.ignore-area{padding:0;border:none}
+.ignore-row{display:flex;gap:6px;align-items:center}
+.ignore-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;min-height:14px}
+.itag{display:flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;border:1px solid var(--line2);color:var(--ink4);font-size:10px;background:#fafaf8}
+.itag button{background:none;border:none;color:var(--ink5);cursor:pointer;font-size:11px;padding:0;line-height:1}
+.itag button:hover{color:var(--redl)}
+
+/* ── FREQ WORDS ── */
+.wordcard{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line);border-radius:2px;cursor:pointer;background:#fafaf8;transition:all 0.15s}
+.wordcard:hover,.wordcard.active{border-color:var(--amber);background:rgba(200,120,10,0.08)}
+.wct{font-size:18px;font-family:'Noto Serif TC',serif;color:var(--amberl);min-width:40px;text-align:center}
+.winfo{flex:1}.wtxt{font-size:13px;color:var(--ink2)}.wcnt{font-size:10px;color:var(--ink5);letter-spacing:1px;margin-top:1px}
+.wbadge{font-size:10px;padding:1px 6px;border-radius:8px;border:1px solid;letter-spacing:1px}
+.wbadge.hi{background:rgba(192,57,43,0.12);border-color:var(--red);color:var(--redl)}
+.wbadge.md{background:rgba(200,120,10,0.1);border-color:var(--amber);color:var(--amberl)}
+.wbadge.lo{background:rgba(255,255,255,0.03);border-color:var(--line2);color:var(--ink4)}
+
+/* ── BOOK SHELF ── */
+.bookshelf{display:flex;flex-wrap:wrap;gap:14px;padding:20px}
+.bookcard{
+  width:140px;cursor:pointer;
+  background:#fff;border:1px solid var(--line2);border-radius:4px;
+  overflow:hidden;transition:all 0.2s;
+}
+.bookcard:hover{border-color:var(--amber);transform:translateY(-2px);box-shadow:0 4px 16px rgba(16,14,10,0.1)}
+.bookcard.active{border-color:var(--amberl);box-shadow:0 0 0 2px rgba(200,120,10,0.3)}
+.book-spine{height:3px;background:var(--ink)}
+.book-body{padding:10px}
+.book-title{font-family:'Noto Serif TC',serif;font-size:14px;color:var(--ink);letter-spacing:2px;margin-bottom:4px;word-break:break-all}
+.book-meta{font-size:10px;color:var(--ink5);letter-spacing:1px;line-height:1.6}
+.book-new{
+  width:140px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:8px;cursor:pointer;
+  background:transparent;border:1px dashed var(--line2);border-radius:4px;
+  padding:24px 10px;color:var(--ink5);font-size:12px;
+  transition:all 0.2s;letter-spacing:1px;
+}
+.book-new:hover{border-color:var(--amber);color:var(--amberl);background:rgba(200,120,10,0.05)}
+.book-new-icon{font-size:28px;font-family:'Noto Serif TC',serif;color:var(--ink5)}
+
+/* ── CHAR BADGE ── */
+.cbadge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:12px;font-size:11px;
+  border:1px solid var(--line2);color:var(--ink4);
+  cursor:pointer;background:rgba(255,255,255,0.02);
+  transition:all 0.15s;letter-spacing:1px;
+}
+.cbadge:hover{border-color:var(--amber);color:var(--amberl)}
+.cbadge.on{background:rgba(200,120,10,0.12);border-color:var(--amber);color:var(--amberl)}
+.cbadge .dot{width:6px;height:6px;border-radius:50%;background:var(--amberl);display:none}
+.cbadge.on .dot{display:block}
+
+/* ── ANALYSIS ── */
+.ana-section{border:1px solid var(--line);border-radius:3px;overflow:hidden;flex-shrink:0}
+.ana-hd{padding:8px 12px;background:#f8f6f2;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink3);letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.ana-bd{padding:10px 12px;font-size:12px;color:var(--ink3);line-height:1.8}
+.ana-tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;border:1px solid;margin:2px;letter-spacing:1px}
+.ana-tag.warn{background:rgba(192,57,43,0.1);border-color:var(--red);color:var(--redl)}
+.ana-tag.note{background:rgba(200,120,10,0.1);border-color:var(--amber);color:var(--amberl)}
+.ana-tag.ok{background:rgba(26,107,90,0.1);border-color:var(--teal);color:var(--tealx)}
+
+/* ── SETTINGS PANEL ── */
+.setpanel{
+  position:fixed;top:0;right:-400px;width:380px;height:100vh;
+  background:#fff;border-left:1px solid #d0ccc0;
+  display:flex;flex-direction:column;
+  transition:right 0.25s ease;z-index:500;
+  box-shadow:-8px 0 28px rgba(0,0,0,0.6);
+}
+.setpanel.open{right:0}
+.sethd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-shrink:0}
+.sethd-title{font-size:14px;color:var(--ink2);letter-spacing:2px}
+.setclose{margin-left:auto;background:none;border:none;color:var(--ink5);cursor:pointer;font-size:18px;transition:color 0.15s}
+.setclose:hover{color:var(--ink2)}
+.setbody{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.setbody::-webkit-scrollbar{width:4px}
+.setbody::-webkit-scrollbar-thumb{background:var(--line3);border-radius:2px}
+.prov-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.ptab{padding:4px 10px;font-size:11px;border-radius:2px;border:1px solid var(--line2);color:var(--ink4);cursor:pointer;background:transparent;font-family:'Noto Serif TC',serif;transition:all 0.15s;letter-spacing:1px}
+.ptab:hover{color:var(--ink3)}
+.ptab.on{background:rgba(200,120,10,0.1);border-color:var(--amber);color:var(--amberl)}
+.model-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.mchip{padding:3px 8px;font-size:11px;border-radius:10px;border:1px solid var(--line2);color:var(--ink4);cursor:pointer;background:transparent;font-family:monospace;transition:all 0.15s}
+.mchip:hover{color:var(--ink3)}
+.mchip.on{background:rgba(200,120,10,0.1);border-color:var(--amber);color:var(--amberl)}
+.key-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.key-inp{flex:1;padding:5px 8px;font-size:11px;background:#fff;color:var(--ink2);border:1px solid var(--line2);border-radius:2px;font-family:monospace;outline:none}
+.key-inp:focus{border-color:var(--amber)}
+.key-eye{background:none;border:1px solid var(--line2);color:var(--ink5);padding:4px 7px;border-radius:2px;cursor:pointer;font-size:12px;transition:all 0.15s}
+.key-eye:hover{color:var(--ink3)}
+.api-link{font-size:10px;color:var(--amber);text-decoration:none;letter-spacing:1px;display:flex;align-items:center;gap:4px;margin-top:4px;transition:color 0.15s}
+.api-link:hover{color:var(--amberl)}
+
+/* ── LOADING ── */
+.ldg{display:none;position:fixed;inset:0;background:rgba(250,249,246,0.96);z-index:8000;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.ldg.on{display:flex}
+.lbrush{font-size:32px;animation:brush 1.2s ease-in-out infinite}
+@keyframes brush{0%,100%{transform:rotate(-15deg) scale(1)}50%{transform:rotate(15deg) scale(1.1)}}
+.ltxt{font-size:13px;color:var(--ink);letter-spacing:3px;}
+
+/* ── NOTIFY ── */
+.notif{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--ink3);padding:8px 24px;border-radius:0;font-size:12px;color:var(--ink2);border-top:2.5px solid var(--ink);letter-spacing:2px;;letter-spacing:1px;opacity:0;pointer-events:none;transition:opacity 0.3s;z-index:9500;white-space:nowrap}
+.notif.on{opacity:1}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:700;align-items:center;justify-content:center}
+.modal-bg.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--line2);border-radius:6px;width:460px;max-width:92vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-hd{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.modal-title{font-family:'Noto Serif TC',serif;font-size:16px;color:var(--amberl);letter-spacing:3px}
+.modal-close{margin-left:auto;background:none;border:none;color:var(--ink5);cursor:pointer;font-size:18px}
+.modal-close:hover{color:var(--ink2)}
+.modal-body{overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.modal-ft{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+.len-cards{display:flex;gap:8px}
+.len-card{flex:1;padding:10px;border:1px solid var(--line2);border-radius:3px;cursor:pointer;text-align:center;transition:all 0.15s}
+.len-card:hover{border-color:var(--amber)}
+.len-card.on{border-color:var(--amber);background:rgba(200,120,10,0.1)}
+.len-card .lname{font-family:'Noto Serif TC',serif;font-size:15px;color:var(--amberl);letter-spacing:2px}
+.len-card .ldesc{font-size:10px;color:var(--ink5);letter-spacing:1px;margin-top:3px}
+
+/* ── BOOK HEADER ── */
+.book-hdr{
+  display:flex;align-items:center;gap:10px;padding:8px 14px;
+  background:var(--bg2);border-bottom:1px solid var(--line);flex-shrink:0;
+}
+.book-hdr-name{font-family:'Noto Serif TC',serif;font-size:15px;color:var(--amberl);letter-spacing:3px}
+.book-hdr-meta{font-size:10px;color:var(--ink5);letter-spacing:1px}
+
+/* active highlight in repeat word */
+.rep-hi{background:rgba(200,120,10,0.22);color:var(--amberl);border-radius:2px}
+.ic.hi{border-color:var(--amber)!important;background:rgba(200,120,10,0.1)!important;animation:litup 1.5s ease}
+.sr-rep{border-bottom:2px solid var(--redl);color:var(--redl)}
+
+/* ══ LEFT CHAPTER DRAWER ══ */
+.drawer-toggle{
+  position:fixed;left:0;top:50%;transform:translateY(-50%);
+  width:18px;height:52px;z-index:200;cursor:pointer;
+  background:var(--bg2);border:1px solid var(--line2);border-left:none;
+  border-radius:0 6px 6px 0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--ink4);transition:all 0.2s;
+  box-shadow:2px 0 8px rgba(0,0,0,0.1);
+  writing-mode:vertical-rl;letter-spacing:2px;
+}
+.drawer-toggle:hover{background:var(--bg3);color:var(--ink2);width:22px}
+.drawer{
+  position:fixed;left:-280px;top:46px;bottom:0;width:270px;
+  background:#fff;border-right:2px solid var(--ink);
+  display:flex;flex-direction:column;z-index:190;
+  transition:left 0.25s ease;
+  box-shadow:4px 0 16px rgba(0,0,0,0.1);
+}
+.drawer.open{left:0}
+.drawer-hd{
+  padding:10px 14px;border-bottom:1px solid #d8d4c8;
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  background:#f8f7f3;
+}
+.drawer-title{font-size:12px;color:var(--ink2);letter-spacing:2px;flex:1;font-family:'Noto Serif TC',serif}
+.drawer-close{background:none;border:none;color:var(--ink5);cursor:pointer;font-size:16px;padding:0;transition:color 0.15s}
+.drawer-close:hover{color:var(--ink2)}
+.drawer-body{flex:1;overflow-y:auto;padding:8px 0}
+.drawer-body::-webkit-scrollbar{width:4px}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+.drawer-book{
+  padding:6px 14px;font-size:11px;color:var(--ink4);
+  letter-spacing:1px;border-bottom:1px solid var(--line);
+  background:#f8f7f3;
+}
+.drawer-book-name{font-family:'Noto Serif TC',serif;font-size:13px;color:var(--ink2);letter-spacing:2px}
+.ch-node{display:flex;flex-direction:column}
+.ch-row{
+  display:flex;align-items:center;gap:0;
+  padding:0;cursor:pointer;
+  transition:background 0.12s;
+  border-bottom:1px solid rgba(0,0,0,0.04);
+}
+.ch-row:hover{background:rgba(13,11,8,0.04)}
+.ch-row.active{background:rgba(139,26,42,0.07)}
+.ch-indent{flex-shrink:0;display:flex;align-items:center}
+.ch-toggle{
+  width:22px;height:32px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:var(--ink5);cursor:pointer;
+  transition:transform 0.15s;
+}
+.ch-toggle.open{transform:rotate(90deg)}
+.ch-name{
+  flex:1;padding:7px 10px 7px 4px;
+  font-size:12px;color:var(--ink3);letter-spacing:1px;
+  line-height:1.4;
+}
+.ch-row.active .ch-name{color:var(--accent);font-weight:500}
+.ch-add{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 14px;font-size:11px;color:var(--ink5);
+  cursor:pointer;letter-spacing:1px;
+  transition:all 0.15s;border-bottom:1px solid var(--line);
+}
+.ch-add:hover{color:var(--amber);background:rgba(200,120,10,0.05)}
+.ch-children{display:none;border-left:1.5px solid var(--line);margin-left:18px}
+.ch-children.open{display:block}
+.ch-actions{
+  display:flex;gap:0;opacity:0;transition:opacity 0.15s;flex-shrink:0;
+}
+.ch-row:hover .ch-actions{opacity:1}
+.ch-act{
+  width:24px;height:32px;display:flex;align-items:center;justify-content:center;
+  background:none;border:none;cursor:pointer;font-size:11px;
+  color:var(--ink5);transition:color 0.15s;
+}
+.ch-act:hover{color:var(--accent)}
+/* chapter name inline edit */
+.ch-name-input{
+  flex:1;background:rgba(255,255,255,0.8);border:1px solid var(--amber);
+  border-radius:2px;padding:3px 6px;font-size:12px;color:var(--ink);
+  font-family:'Noto Serif TC',serif;outline:none;
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="logo">筆塚<small>· 潤稿</small></div>
+  <div class="navtabs">
+    <button class="ntab on" data-pg="shelf" onclick="goPage('shelf')">📚 書架</button>
+    <button class="ntab" data-pg="pr" onclick="goPage('pr')">🖌 批校潤稿</button>
+    <button class="ntab" data-pg="rep" onclick="goPage('rep')">🔍 重複詞</button>
+    <button class="ntab" data-pg="workshop" onclick="goPage('workshop')">⚒ 修改工坊</button>
+    <button class="ntab" data-pg="ana" onclick="goPage('ana')">📊 章節分析</button>
+    <button class="ntab" data-pg="free" onclick="goPage('free')">💬 自由詢問</button>
+    <button class="ntab" data-pg="charcraft" onclick="goPage('charcraft')">🎭 角色創作</button>
+  </div>
+  <div class="topbtns">
+    <button class="tbtn" id="cur-book-btn" onclick="goPage('shelf')" style="display:none"></button>
+    <button class="tbtn" onclick="openSettings()">⚙ AI 設定</button>
+  </div>
+</div>
+
+<!-- ══ WORKSPACE ══ -->
+<div class="ws">
+
+<!-- ════ PAGE: 書架 ════ -->
+<div class="page on" id="page-shelf">
+  <div style="flex:1;overflow-y:auto">
+    <div style="padding:20px 20px 8px;display:flex;align-items:center;gap:12px">
+      <div style="font-family:'Noto Serif TC',serif;font-size:20px;color:var(--ink2);letter-spacing:4px">我的書架</div>
+      <div style="font-size:11px;color:var(--ink5);letter-spacing:1px;margin-top:4px">選擇一本書開始潤稿</div>
+    </div>
+    <div class="bookshelf" id="bookshelf"></div>
+  </div>
+</div>
+
+<!-- ════ PAGE: 批校潤稿 ════ -->
+<div class="page" id="page-pr">
+  <div id="pr-book-hdr" class="book-hdr" style="display:none"></div>
+  <div class="split">
+    <div class="lpanel">
+      <div class="farea" id="pr-input-area">
+        <div class="frow">
+          <span class="flbl">文風：</span>
+          <select class="fsel" id="pr-genre"><option>古風／武俠</option><option>現代言情</option><option>懸疑推理</option><option>奇幻玄幻</option></select>
+          <span class="flbl" style="margin-left:8px">力度：</span>
+          <select class="fsel" id="pr-dir"><option>保守</option><option selected>柔順</option><option>文學</option></select>
+        </div>
+        <div class="chips" id="pr-mode-chips">
+          <button class="chip on" data-mode="word" onclick="setPRMode('word')">🔤 詞句批校</button>
+          <button class="chip" data-mode="sent" onclick="setPRMode('sent')">📝 整句潤色</button>
+          <button class="chip" data-mode="ctx" onclick="setPRMode('ctx')">🔍 全文上下文</button>
+        </div>
+        <div id="pr-ctx-hint" style="display:none;font-size:11px;color:var(--ink4);letter-spacing:1px;padding:6px 10px;background:rgba(122,16,32,0.05);border:1px solid rgba(122,16,32,0.15);border-radius:2px;line-height:1.8">
+          📌 <strong>全文上下文模式</strong>：在下方貼入<strong>全文</strong>，然後在文本中<strong>選取要改進的句子</strong>，AI 會讀完全文再針對那句給建議。
+          <div id="pr-ctx-sel-display" style="margin-top:6px;display:none;padding:5px 8px;background:#fff;border-left:2px solid var(--accent);font-size:12px;color:var(--ink2);line-height:1.7">
+            <span style="font-size:10px;color:var(--ink5)">已選取：</span><span id="pr-ctx-sel-text"></span>
+          </div>
+        </div>
+        <textarea class="ta" id="pr-ta" placeholder="貼入要批校的段落……" oninput="if(window._activeChId)saveChapterContent(window._activeChId,this.value)" onmouseup="onPRTaSelect()" onkeyup="onPRTaSelect()"></textarea>
+        <div class="brow">
+          <button class="btn btn-p" onclick="runPR()">🖌 開始批校</button>
+          <button class="btn btn-g sm" onclick="prClear()">清空</button>
+        </div>
+      </div>
+      <div id="pr-ann-wrap" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+        <div class="statbar" id="pr-stats"></div>
+        <div class="ann-body" id="pr-body" contenteditable="true" spellcheck="false" style="outline:none;cursor:text"></div>
+        <div style="font-size:10px;color:var(--ink5);letter-spacing:1px;padding:4px 12px;border-top:1px solid var(--line);flex-shrink:0">✎ 可直接在文本上手動修改</div>
+        <div class="rbar">
+          <button class="btn btn-g sm" onclick="prBack()">← 重新輸入</button>
+          <button class="btn btn-a sm" onclick="prConfirm()">✓ 確認定稿</button>
+        </div>
+      </div>
+    </div>
+    <div class="rpanel">
+      <div class="rhdr"><div class="rtitle">問題清單</div><div class="rct" id="pr-ct">待批校</div></div>
+      <div id="pr-right-tabs" style="display:none">
+        <div class="subtabs" style="background:var(--bg2)">
+          <button class="stab on" data-rt="word" onclick="setPRRightTab('word')">⚠ 詞句問題</button>
+          <button class="stab" data-rt="sent" onclick="setPRRightTab('sent')">📝 整句潤色</button>
+        </div>
+      </div>
+      <div class="rlist" id="pr-list"><div class="empty"><div class="eseal">批</div><p>設定後<br>點擊「開始批校」</p></div></div>
+      <div class="rlist" id="pr-sent-list" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: 重複詞 ════ -->
+<div class="page" id="page-rep">
+  <div id="rep-book-hdr" class="book-hdr" style="display:none"></div>
+  <div class="subtabs">
+    <button class="stab on" data-st="sr" onclick="setRepTab('sr')">🔍 逐句重複</button>
+    <button class="stab" data-st="fr" onclick="setRepTab('fr')">📑 全文重複</button>
+  </div>
+  <!-- SR subtab -->
+  <div id="rep-sr" style="display:flex;flex:1;overflow:hidden;flex-direction:column">
+    <div class="split" style="flex:1;overflow:hidden">
+      <div class="lpanel">
+        <div class="farea" id="sr-input-area">
+          <textarea class="ta" id="sr-ta" placeholder="貼入段落，以換行分句，逐句檢查同句內重複詞……"></textarea>
+          <div class="brow">
+            <button class="btn btn-p" onclick="runSR()">🔍 逐句檢查</button>
+            <button class="btn btn-g sm" onclick="srClear()">清空</button>
+          </div>
+          <div class="ignore-area">
+            <div class="slbl">忽略詞庫</div>
+            <div class="ignore-row">
+              <input class="inp" id="sr-ignore-in" placeholder="例：她、他、姐姐（可批量，用、或，分隔）" onkeydown="if(event.key==='Enter')addIgnore('sr')">
+              <button class="btn btn-g sm" onclick="addIgnore('sr')">加入</button>
+            </div>
+            <div class="ignore-tags" id="sr-ignore-tags"></div>
+          </div>
+        </div>
+        <div id="sr-result" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+          <div class="rbar">
+            <span style="font-size:11px;color:var(--ink5);letter-spacing:1px" id="sr-ct"></span>
+            <button class="btn btn-g sm" onclick="srBack()">← 重新輸入</button>
+          </div>
+          <div class="farea" id="sr-sentences" style="gap:10px"></div>
+        </div>
+      </div>
+      <div class="rpanel">
+        <div class="rhdr"><div class="rtitle">重複詞統計</div><div class="rct" id="sr-rct">待檢查</div></div>
+        <div class="rlist" id="sr-rlist"><div class="empty"><div class="eseal">句</div><p>逐句檢查<br>同句內重複詞</p></div></div>
+      </div>
+    </div>
+  </div>
+  <!-- FR subtab -->
+  <div id="rep-fr" style="display:none;flex:1;overflow:hidden">
+    <div class="split" style="flex:1;overflow:hidden">
+      <div class="lpanel">
+        <div class="farea" id="fr-input-area">
+          <textarea class="ta" id="fr-ta" placeholder="貼入全文，掃描所有重複詞（包括單字，出現2次以上即標記）……"></textarea>
+          <div class="brow">
+            <button class="btn btn-p" onclick="runFR()">📑 全文掃描</button>
+            <button class="btn btn-g sm" onclick="frClear()">清空</button>
+          </div>
+          <div class="ignore-area">
+            <div class="slbl">忽略詞庫</div>
+            <div class="ignore-row">
+              <input class="inp" id="fr-ignore-in" placeholder="例：她、他、姐姐（可批量，用、或，分隔）" onkeydown="if(event.key==='Enter')addIgnore('fr')">
+              <button class="btn btn-g sm" onclick="addIgnore('fr')">加入</button>
+            </div>
+            <div class="ignore-tags" id="fr-ignore-tags"></div>
+          </div>
+        </div>
+        <div id="fr-result" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+          <div class="rbar">
+            <span style="font-size:11px;color:var(--ink5)" id="fr-ct"></span>
+            <button class="btn btn-g sm" onclick="frBack()">← 重新輸入</button>
+          </div>
+          <div class="ann-body" id="fr-body" style="flex:1"></div>
+        </div>
+      </div>
+      <div class="rpanel">
+        <div class="rhdr"><div class="rtitle">重複詞清單</div><div class="rct" id="fr-rct">待掃描</div></div>
+        <div id="fr-rlist-wrap" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+          <div class="empty" id="fr-empty"><div class="eseal">文</div><p>掃描全文<br>統計重複詞</p></div>
+          <div style="display:none;flex:1;flex-direction:column;overflow:hidden" id="fr-cats">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--line);flex-shrink:0">
+              <div class="chips">
+                <button class="chip on" id="fr-cat-hi" onclick="showFRCat('hi')">高頻 ≥8次</button>
+                <button class="chip" id="fr-cat-md" onclick="showFRCat('md')">中頻 4-7次</button>
+                <button class="chip" id="fr-cat-lo" onclick="showFRCat('lo')">低頻 2-3次</button>
+              </div>
+            </div>
+            <div class="rlist" id="fr-rlist"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: 修改工坊 ════ -->
+<div class="page" id="page-workshop">
+  <div id="ws-book-hdr" class="book-hdr" style="display:none"></div>
+  <div class="subtabs">
+    <button class="stab on" data-st="dl" onclick="setWSTab('dl')">💬 對白修正</button>
+    <button class="stab" data-st="pt" onclick="setWSTab('pt')">📖 劇情改寫</button>
+  </div>
+  <!-- DL subtab -->
+  <div id="ws-dl" style="display:flex;flex:1;overflow:hidden">
+    <div class="split" style="flex:1;overflow:hidden">
+      <div class="lpanel">
+        <div class="farea" id="dl-input-area">
+          <div class="slbl">角色人設</div>
+          <div id="dl-chars-from-book" style="display:none">
+            <div style="font-size:11px;color:var(--ink4);letter-spacing:1px;margin-bottom:6px">從書本選擇角色：</div>
+            <div class="chips" id="dl-char-chips"></div>
+          </div>
+          <div id="dl-chars" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div class="addchar" onclick="addDLChar()">＋ 新增角色</div>
+          <div class="divider"></div>
+          <div class="chips" id="dl-mode-chips">
+            <button class="chip on" data-mode="auto" onclick="setDLMode('auto')">🤖 AI 自動找問題</button>
+            <button class="chip" data-mode="manual" onclick="setDLMode('manual')">✍ 我指定方向</button>
+          </div>
+          <div id="dl-manual-dir" style="display:none">
+            <textarea class="ta xs" id="dl-dir-ta" placeholder="說明修改方向……"></textarea>
+          </div>
+          <textarea class="ta" id="dl-ta" placeholder="貼入含對白的段落……"></textarea>
+          <div class="brow">
+            <button class="btn btn-p" onclick="runDL()">💬 分析對白</button>
+          </div>
+        </div>
+        <div id="dl-ann-wrap" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+          <div class="statbar" id="dl-stats"></div>
+          <div class="ann-body" id="dl-body"></div>
+          <div class="rbar">
+            <button class="btn btn-g sm" onclick="dlBack()">← 重新輸入</button>
+            <button class="btn btn-a sm" onclick="dlConfirm()">✓ 確認定稿</button>
+          </div>
+        </div>
+      </div>
+      <div class="rpanel">
+        <div class="rhdr"><div class="rtitle">對白問題</div><div class="rct" id="dl-ct">待分析</div></div>
+        <div class="rlist" id="dl-list"><div class="empty"><div class="eseal">白</div><p>設定角色後<br>點擊「分析對白」</p></div></div>
+      </div>
+    </div>
+  </div>
+  <!-- PT subtab -->
+  <div id="ws-pt" style="display:none;flex:1;overflow:hidden">
+    <div class="split" style="flex:1;overflow:hidden">
+      <div class="lpanel">
+        <div class="farea" id="pt-input-area">
+          <div class="slbl">角色人設</div>
+          <div id="pt-chars-from-book" style="display:none">
+            <div style="font-size:11px;color:var(--ink4);letter-spacing:1px;margin-bottom:6px">從書本選擇角色：</div>
+            <div class="chips" id="pt-char-chips"></div>
+          </div>
+          <div id="pt-chars" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div class="addchar" onclick="addPTChar()">＋ 新增角色</div>
+          <div class="divider"></div>
+          <div class="frow">
+            <span class="flbl">文風：</span>
+            <select class="fsel" id="pt-genre"><option>古風／武俠</option><option>現代言情</option><option>懸疑推理</option><option>奇幻玄幻</option></select>
+          </div>
+          <div class="chips" id="pt-mode-chips">
+            <button class="chip on" data-mode="ai" onclick="setPTMode('ai')">🤖 AI 提方向（3個）</button>
+            <button class="chip" data-mode="manual" onclick="setPTMode('manual')">✍ 我指定改法</button>
+          </div>
+          <div id="pt-ai-opts">
+            <div class="frow">
+              <span class="flbl">方向偏好：</span>
+              <select class="fsel" id="pt-dir"><option>自由發揮</option><option>加深衝突</option><option>轉折反轉</option><option>情感升溫</option><option>節奏放緩</option><option>增加懸念</option></select>
+            </div>
+          </div>
+          <div id="pt-manual-dir" style="display:none">
+            <textarea class="ta xs" id="pt-dir-ta" placeholder="說明改寫要求……"></textarea>
+          </div>
+          <div class="slbl">上文背景（選填）</div>
+          <textarea class="ta sm" id="pt-ctx" placeholder="貼入前段或前章內容（選填）……"></textarea>
+          <div class="slbl">要改寫的段落</div>
+          <textarea class="ta" id="pt-ta" placeholder="貼入要改寫的段落……"></textarea>
+          <div class="brow">
+            <button class="btn btn-p" onclick="runPT()">📖 生成改寫</button>
+          </div>
+        </div>
+        <div id="pt-result" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+          <div class="rbar">
+            <button class="btn btn-g sm" onclick="ptBack()">← 重新輸入</button>
+            <button class="btn btn-a sm" id="pt-use-btn" style="display:none" onclick="ptUse()">✓ 使用此稿</button>
+          </div>
+          <div class="farea" id="pt-content"></div>
+        </div>
+      </div>
+      <div class="rpanel">
+        <div class="rhdr"><div class="rtitle">改寫方向</div><div class="rct" id="pt-ct">待生成</div></div>
+        <div class="rlist" id="pt-dirs"><div class="empty"><div class="eseal">改</div><p>設定後<br>點擊「生成改寫」</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: 章節分析 ════ -->
+<div class="page" id="page-ana" style="overflow:hidden">
+  <div id="ana-book-hdr" class="book-hdr" style="display:none"></div>
+  <div class="split">
+    <div class="lpanel">
+      <div class="farea" id="ana-input-area">
+        <div class="frow">
+          <span class="flbl">文風：</span>
+          <select class="fsel" id="ana-genre"><option>古風／武俠</option><option>現代言情</option><option>懸疑推理</option><option>奇幻玄幻</option></select>
+        </div>
+        <div class="slbl">分析重點</div>
+        <div class="chips" id="ana-focus-chips">
+          <button class="chip on" data-f="all" onclick="setAnaFocus('all')">全面分析</button>
+          <button class="chip" data-f="readability" onclick="setAnaFocus('readability')">閱讀性</button>
+          <button class="chip" data-f="pacing" onclick="setAnaFocus('pacing')">節奏</button>
+          <button class="chip" data-f="char" onclick="setAnaFocus('char')">人物</button>
+        </div>
+        <textarea class="ta" id="ana-ta" placeholder="貼入要分析的章節……"></textarea>
+        <div class="brow">
+          <button class="btn btn-p" onclick="runAna()">📊 分析章節</button>
+          <button class="btn btn-g sm" onclick="anaClear()">清空</button>
+        </div>
+      </div>
+    </div>
+    <div class="rpanel">
+      <div class="rhdr"><div class="rtitle">章節分析報告</div><div class="rct" id="ana-ct">待分析</div></div>
+      <div class="rlist" id="ana-result">
+        <div class="empty"><div class="eseal">析</div><p>貼入章節<br>AI 幫你分析讀者觀感</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: 自由詢問 ════ -->
+<div class="page" id="page-free" style="overflow:hidden">
+  <div id="free-book-hdr" class="book-hdr" style="display:none"></div>
+  <div class="split">
+    <div class="lpanel">
+      <div class="farea" id="free-left">
+        <div class="slbl">提示詞模板</div>
+        <div class="chips" id="free-preset-chips" style="flex-wrap:wrap;gap:4px"></div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <input class="inp" id="free-tpl-name" placeholder="模板名稱……">
+          <button class="btn btn-g sm" onclick="saveFreeTemplate()">儲存當前提示</button>
+        </div>
+        <div class="divider"></div>
+
+        <!-- 角色對白仿寫專區（只在選擇該模板時顯示） -->
+        <div id="free-char-section" style="display:none;flex-direction:column;gap:7px">
+          <div class="slbl">角色資料
+            <span style="font-size:10px;color:var(--ink5);letter-spacing:0;font-weight:normal">（AI 會依此性格仿寫對白）</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+            <div><label style="font-size:10px;color:var(--ink5);display:block;margin-bottom:2px">角色名</label><input class="inp" id="free-char-name" placeholder="角色名"></div>
+            <div><label style="font-size:10px;color:var(--ink5);display:block;margin-bottom:2px">性格</label><input class="inp" id="free-char-personality" placeholder="傲嬌、冷靜……"></div>
+            <div><label style="font-size:10px;color:var(--ink5);display:block;margin-bottom:2px">說話方式</label><input class="inp" id="free-char-speech" placeholder="古典、豪爽……"></div>
+            <div><label style="font-size:10px;color:var(--ink5);display:block;margin-bottom:2px">身份</label><input class="inp" id="free-char-role" placeholder="劍客、公主……"></div>
+          </div>
+          <textarea class="ta xs" id="free-char-bg" placeholder="角色背景（選填）……" style="min-height:48px"></textarea>
+          <div class="slbl">要生成幾句？</div>
+          <div class="chips" id="free-char-count-chips">
+            <button class="chip on" data-n="3" onclick="setFreeCharCount(3)">3句</button>
+            <button class="chip" data-n="5" onclick="setFreeCharCount(5)">5句</button>
+            <button class="chip" data-n="10" onclick="setFreeCharCount(10)">10句</button>
+          </div>
+          <div class="divider"></div>
+          <div class="slbl">參考對白範例
+            <span style="font-size:10px;color:var(--ink5);letter-spacing:0">（貼入已有的對白，AI 學習風格後仿寫）</span>
+          </div>
+        </div>
+
+        <div class="slbl" id="free-content-lbl">提示詞</div>
+        <textarea class="ta sm" id="free-sys-ta" placeholder="自訂提示詞……（可空白使用預設）" style="min-height:80px"></textarea>
+        <div class="slbl" id="free-input-lbl">輸入內容</div>
+        <textarea class="ta" id="free-ta" placeholder="貼入文章、問題、要處理的內容……"></textarea>
+        <div class="brow">
+          <button class="btn btn-p" onclick="runFree()">💬 送出詢問</button>
+          <button class="btn btn-g sm" onclick="freeClear()">清空</button>
+        </div>
+      </div>
+    </div>
+    <div class="rpanel">
+      <div class="rhdr"><div class="rtitle">回覆</div><div class="rct" id="free-ct">待詢問</div></div>
+      <div class="rlist" id="free-result">
+        <div class="empty"><div class="eseal">問</div><p>輸入提示詞<br>自由詢問 AI</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: 角色創作 ════ -->
+<div class="page" id="page-charcraft" style="overflow:hidden">
+  <div id="charcraft-book-hdr" class="book-hdr" style="display:none"></div>
+  <div class="split">
+    <div class="lpanel">
+      <div class="farea" id="charcraft-left">
+        <div class="slbl">角色資料</div>
+        <div class="chgrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div><label style="font-size:10px;color:var(--ink4);letter-spacing:1px;display:block;margin-bottom:3px">角色名</label><input class="inp" id="cc-name" placeholder="角色名字"></div>
+          <div><label style="font-size:10px;color:var(--ink4);letter-spacing:1px;display:block;margin-bottom:3px">性別</label><input class="inp" id="cc-gender" placeholder="男／女"></div>
+          <div><label style="font-size:10px;color:var(--ink4);letter-spacing:1px;display:block;margin-bottom:3px">性格</label><input class="inp" id="cc-personality" placeholder="傲嬌、溫柔……"></div>
+          <div><label style="font-size:10px;color:var(--ink4);letter-spacing:1px;display:block;margin-bottom:3px">身份</label><input class="inp" id="cc-role" placeholder="主角、劍客……"></div>
+        </div>
+        <div><label style="font-size:10px;color:var(--ink4);letter-spacing:1px;display:block;margin-bottom:3px">說話方式</label><input class="inp" id="cc-speech" placeholder="文雅古典、豪爽……" style="width:100%"></div>
+        <textarea class="ta sm" id="cc-story" placeholder="角色背景故事、物語……（越詳細越好）" style="min-height:80px"></textarea>
+        <div class="divider"></div>
+        <div class="slbl">對白場景模板</div>
+        <div class="chips" id="cc-scene-chips" style="flex-wrap:wrap;gap:4px"></div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <input class="inp" id="cc-scene-name" placeholder="場景名稱……（如：召喚、勝利）">
+          <button class="btn btn-g sm" onclick="addCCScene()">新增場景</button>
+        </div>
+        <div id="cc-scenes" style="display:flex;flex-direction:column;gap:5px;margin-top:4px"></div>
+        <div class="divider"></div>
+        <div class="slbl">自訂要求（選填）</div>
+        <textarea class="ta xs" id="cc-req" placeholder="例如：台詞需要帶出她的悲壯感……"></textarea>
+        <div class="brow">
+          <button class="btn btn-p" onclick="runCharCraft()">🎭 生成對白</button>
+        </div>
+      </div>
+    </div>
+    <div class="rpanel">
+      <div class="rhdr"><div class="rtitle">生成對白</div><div class="rct" id="cc-ct">待生成</div></div>
+      <div class="rlist" id="cc-result">
+        <div class="empty"><div class="eseal">角</div><p>填入角色資料<br>選擇場景後生成對白</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- ws -->
+
+<!-- ══ POPUP ══ -->
+<div class="popup" id="popup">
+  <div class="pophd">
+    <span class="popbdg" id="pop-bdg"></span>
+    <button class="popx" onclick="closePopup();event.stopPropagation()">✕</button>
+  </div>
+  <div class="popbd">
+    <div class="poptxt" id="pop-txt"></div>
+    <div id="pop-reason" style="display:none;font-size:11px;color:var(--amberl);letter-spacing:1px;padding:5px 10px;background:rgba(200,120,10,0.08);border-left:2px solid var(--amber);border-radius:0 2px 2px 0;margin-bottom:6px"></div>
+    <div class="popq" id="pop-q"></div>
+    <div class="popsugs" id="pop-sugs"></div>
+    <div class="pop-reply-wrap">
+      <div class="pop-reply-lbl">💭 告訴 AI 你想要的感覺</div>
+      <div class="pop-reply-row">
+        <textarea class="pop-reply-ta" id="pop-reply-ta" placeholder="例如：需要更悲傷的語氣、保留古典感……" rows="2"></textarea>
+        <button class="pop-reply-btn" onclick="sendPopupReply()">重新分析</button>
+      </div>
+      <div class="pop-reply-result" id="pop-reply-result"></div>
+    </div>
+    <div class="popacts" style="margin-top:8px">
+      <button class="popact ok" id="pop-ok">接受建議</button>
+      <button class="popact sk" onclick="ignoreAnn()">略過</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS PANEL ══ -->
+<div class="setpanel" id="setpanel">
+  <div class="sethd">
+    <div class="sethd-title">⚙ AI 設定</div>
+    <button class="setclose" onclick="closeSettings()">✕</button>
+  </div>
+  <div class="setbody">
+    <div>
+      <div class="slbl" style="margin-bottom:8px">AI 供應商</div>
+      <div class="prov-tabs" id="prov-tabs">
+        <button class="ptab on" data-prov="claude" onclick="setProvider('claude')">Claude</button>
+        <button class="ptab" data-prov="openai" onclick="setProvider('openai')">OpenAI</button>
+        <button class="ptab" data-prov="gemini" onclick="setProvider('gemini')">Gemini</button>
+        <button class="ptab" data-prov="groq" onclick="setProvider('groq')">Groq</button>
+        <button class="ptab" data-prov="deepseek" onclick="setProvider('deepseek')">DeepSeek</button>
+        <button class="ptab" data-prov="custom" onclick="setProvider('custom')">自訂</button>
+      </div>
+    </div>
+    <div id="prov-config"></div>
+    <div>
+      <button class="btn btn-t" style="width:100%" onclick="testConn()">🔌 測試連線</button>
+      <div id="test-result" style="font-size:11px;color:var(--ink4);margin-top:6px;letter-spacing:1px;min-height:16px"></div>
+    </div>
+    <div style="border-top:1px solid var(--line);padding-top:12px">
+      <div class="slbl" style="margin-bottom:8px">使用說明 · 連線問題</div>
+      <div id="cors-tips" style="font-size:11px;color:var(--ink5);line-height:2;letter-spacing:0.5px"></div>
+    </div>
+  </div>
+</div>
+<div id="set-overlay" style="display:none;position:fixed;inset:0;z-index:499" onclick="closeSettings()"></div>
+
+<!-- ══ BOOK MODAL ══ -->
+<div class="modal-bg" id="book-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title" id="book-modal-title">新增書本</div>
+      <button class="modal-close" onclick="closeBookModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="slbl" style="margin-bottom:6px">書名</div>
+        <input class="inp" id="bm-title" placeholder="書名……" style="width:100%">
+      </div>
+      <div>
+        <div class="slbl" style="margin-bottom:6px">篇幅</div>
+        <div class="len-cards">
+          <div class="len-card on" data-len="short" onclick="setBookLen('short')">
+            <div class="lname">短篇</div>
+            <div class="ldesc">1—5 萬字</div>
+          </div>
+          <div class="len-card" data-len="mid" onclick="setBookLen('mid')">
+            <div class="lname">中篇</div>
+            <div class="ldesc">5—30 萬字</div>
+          </div>
+          <div class="len-card" data-len="long" onclick="setBookLen('long')">
+            <div class="lname">長篇</div>
+            <div class="ldesc">30 萬字以上</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="slbl" style="margin-bottom:6px">文風</div>
+        <select class="fsel" id="bm-genre" style="width:100%">
+          <option>古風／武俠</option><option>現代言情</option><option>懸疑推理</option><option>奇幻玄幻</option><option>其他</option>
+        </select>
+      </div>
+      <div>
+        <div class="slbl" style="margin-bottom:6px">敘事人稱</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="bm-pov-group">
+          <label class="pov-opt"><input type="radio" name="bm-pov" value="first" checked> <span>第一人稱</span><small>「我」視角</small></label>
+          <label class="pov-opt"><input type="radio" name="bm-pov" value="third_close"> <span>第三人稱（貼近）</span><small>跟隨主角視角</small></label>
+          <label class="pov-opt"><input type="radio" name="bm-pov" value="third_omni"> <span>第三人稱（全知）</span><small>上帝視角</small></label>
+          <label class="pov-opt"><input type="radio" name="bm-pov" value="second"> <span>第二人稱</span><small>「你」視角</small></label>
+        </div>
+      </div>
+      <div>
+        <div class="slbl" style="margin-bottom:6px">簡介（選填）</div>
+        <textarea class="ta xs" id="bm-desc" placeholder="簡短介紹……" style="min-height:60px"></textarea>
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="slbl" style="flex:none;margin-bottom:0">角色人設</div>
+          <button class="btn btn-g sm" onclick="addBookChar()">＋ 新增角色</button>
+        </div>
+        <div id="bm-chars" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-g" onclick="closeBookModal()">取消</button>
+      <button class="btn btn-p" onclick="saveBook()">儲存書本</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOADING / NOTIFY ══ -->
+<!-- ══ CHAPTER DRAWER ══ -->
+<div class="drawer-toggle" id="drawer-toggle" onclick="toggleDrawer()" title="章節目錄">目錄</div>
+<div class="drawer" id="drawer">
+  <div class="drawer-hd">
+    <span class="drawer-title" id="drawer-book-name">──</span>
+    <button class="drawer-close" onclick="toggleDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <div style="padding:20px 14px;text-align:center;font-size:11px;color:var(--ink5);letter-spacing:1px;line-height:1.9">
+      請先在書架選取書本<br>再於此管理章節
+    </div>
+  </div>
+  <div style="padding:8px 10px;border-top:1px solid var(--line);flex-shrink:0">
+    <button class="btn btn-a sm" style="width:100%;letter-spacing:2px" onclick="addChapter(null,0)">＋ 新增章節</button>
+  </div>
+</div>
+
+<div class="ldg" id="ldg"><div class="lbrush">🖌️</div><div class="ltxt" id="ltxt">處理中……</div><div style="font-size:10px;color:var(--ink5);letter-spacing:1px;margin-top:4px" id="ltxt-sub"></div><button class="btn btn-g sm" style="margin-top:8px;font-size:10px;opacity:0.8;border-color:var(--line3);color:var(--ink3)" onclick="window._cancelAI=true;document.getElementById('ldg').classList.remove('on');notify('已取消')">✕ 取消</button></div>
+<div class="notif" id="notif"></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════
+// PROVIDERS
+// ══════════════════════════════════════════
+const PROVIDERS = {
+  claude:   { name:'Claude',   url:'https://api.anthropic.com/v1/messages',         fmt:'claude',  models:['claude-sonnet-4-5-20251101','claude-opus-4-5-20251101','claude-haiku-4-5-20251001','claude-sonnet-4-20250514','claude-opus-4-20250514'], apiLink:'https://console.anthropic.com/account/keys', apiName:'Anthropic Console' },
+  openai:   { name:'OpenAI',   url:'https://api.openai.com/v1/chat/completions',     fmt:'openai',  models:['gpt-5.4','gpt-5.2','gpt-5-mini','gpt-4o'], apiLink:'https://platform.openai.com/api-keys', apiName:'OpenAI Platform' },
+  gemini:   { name:'Gemini',   url:'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}', fmt:'gemini', models:['gemini-3.1-pro-preview','gemini-3-flash-preview','gemini-3.1-flash-lite-preview','gemini-2.5-pro'], apiLink:'https://aistudio.google.com/app/apikey', apiName:'Google AI Studio' },
+  groq:     { name:'Groq',     url:'https://api.groq.com/openai/v1/chat/completions', fmt:'openai', models:['llama-3.3-70b-versatile','llama-3.1-8b-instant','gemma2-9b-it','mixtral-8x7b-32768'], apiLink:'https://console.groq.com/keys', apiName:'Groq Console' },
+  deepseek: { name:'DeepSeek', url:'https://api.deepseek.com/v1/chat/completions',   fmt:'openai',  models:['deepseek-chat','deepseek-reasoner','deepseek-coder-v2'], apiLink:'https://platform.deepseek.com/api_keys', apiName:'DeepSeek Platform' },
+  custom:   { name:'自訂',     url:'', fmt:'openai', models:[], apiLink:'', apiName:'' },
+};
+
+let curProvider = 'claude';
+let apiKeys = {};
+let customURL = '', customModel = '';
+
+try {
+  const s = JSON.parse(localStorage.getItem('novelai_v3')||'{}');
+  apiKeys = s.keys||{}; curProvider = s.provider||'claude';
+  customURL = s.customURL||''; customModel = s.customModel||'';
+} catch(e){}
+
+function saveAISettings() {
+  localStorage.setItem('novelai_v3', JSON.stringify({ keys:apiKeys, provider:curProvider, customURL, customModel }));
+}
+function getCurModel() {
+  const sel = document.getElementById('model-sel');
+  if (sel) return sel.value;
+  return PROVIDERS[curProvider]?.models[0]||'';
+}
+
+let books = [];
+let curBookId = null;
+
+try { books = JSON.parse(localStorage.getItem('novelai_books')||'[]'); } catch(e){ books=[]; }
+function saveBooks() { localStorage.setItem('novelai_books', JSON.stringify(books)); }
+
+// ══════════════════════════════════════════
+// CHAPTER DRAWER
+// ══════════════════════════════════════════
+let drawerOpen = false;
+function toggleDrawer(forceClose){
+  if(forceClose===true) drawerOpen=true; // will be flipped below
+  drawerOpen = !drawerOpen;
+  document.getElementById('drawer').classList.toggle('open', drawerOpen);
+}
+// Click outside drawer closes it
+document.addEventListener('mousedown', function(e){
+  if(!drawerOpen) return;
+  const drawer = document.getElementById('drawer');
+  const toggle = document.getElementById('drawer-toggle');
+  if(!drawer.contains(e.target) && !toggle.contains(e.target)){
+    drawerOpen = true; toggleDrawer(); // force close
+  }
+});
+
+// Chapter data lives inside each book: book.chapters = [{id, title, content, children:[...]}]
+// Renders the full tree for current book
+function renderDrawer(){
+  const book = getCurBook();
+  const nameEl = document.getElementById('drawer-book-name');
+  const bodyEl = document.getElementById('drawer-body');
+  if(!book){ nameEl.textContent='──'; bodyEl.innerHTML='<div style="padding:20px 14px;text-align:center;font-size:11px;color:var(--ink5);letter-spacing:1px;line-height:1.9">請先在書架選取書本<br>再於此管理章節</div>'; return; }
+  nameEl.textContent = book.title||'未命名';
+  const chapters = book.chapters||[];
+  if(!chapters.length){
+    bodyEl.innerHTML = '<div style="padding:20px 14px;text-align:center;font-size:11px;color:var(--ink5);letter-spacing:1px;line-height:1.9">尚無章節<br>點下方「＋ 新增章節」</div>';
+    return;
+  }
+  bodyEl.innerHTML = renderChapterNodes(chapters, 0);
+}
+
+function renderChapterNodes(nodes, depth){
+  return nodes.map(ch => {
+    const hasChildren = ch.children && ch.children.length > 0;
+    const toggleBtn = hasChildren
+      ? `<span class="ch-toggle ${ch._open?'open':''}" onclick="toggleChOpen('${ch.id}',event)">▶</span>`
+      : `<span style="width:22px;flex-shrink:0;display:inline-block"></span>`;
+    const indent = `<span class="ch-indent" style="width:${depth*14}px"></span>`;
+    return `<div class="ch-node" id="chnode-${ch.id}">
+      <div class="ch-row ${window._activeChId===ch.id?'active':''}" data-chid="${ch.id}" onclick="loadChapter('${ch.id}')">
+        ${indent}${toggleBtn}
+        <span class="ch-name" id="chname-${ch.id}">${escH(ch.title||'未命名章節')}</span>
+        <div class="ch-actions">
+          <button class="ch-act" title="重命名" onclick="renameChapter('${ch.id}',event)">✎</button>
+          <button class="ch-act" title="新增子章節" onclick="addChapter('${ch.id}',${depth+1},event)">＋</button>
+          <button class="ch-act" title="刪除" onclick="deleteChapter('${ch.id}',event)" style="color:var(--red)">✕</button>
+        </div>
+      </div>
+      ${hasChildren ? `<div class="ch-children ${ch._open?'open':''}" id="chchildren-${ch.id}">${renderChapterNodes(ch.children, depth+1)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function toggleChOpen(id, e){
+  e.stopPropagation();
+  const book = getCurBook(); if(!book) return;
+  const ch = findChapter(book.chapters||[], id);
+  if(ch){ ch._open = !ch._open; saveBooks(); renderDrawer(); }
+}
+
+function findChapter(nodes, id){
+  for(const n of nodes){
+    if(n.id===id) return n;
+    if(n.children){ const f=findChapter(n.children,id); if(f) return f; }
+  }
+  return null;
+}
+
+function findChapterParent(nodes, id, parent=null){
+  for(const n of nodes){
+    if(n.id===id) return parent;
+    if(n.children){ const f=findChapterParent(n.children,id,n); if(f!==undefined) return f; }
+  }
+  return undefined;
+}
+
+let _activeChId = null;
+window._activeChId = null;
+
+function loadChapter(id){
+  const book = getCurBook(); if(!book) return;
+  const ch = findChapter(book.chapters||[], id);
+  if(!ch) return;
+  window._activeChId = id;
+  // Load content into pr textarea
+  const ta = document.getElementById('pr-ta');
+  if(ta){ ta.value = ch.content||''; }
+  // Also set in workshop
+  const wta = document.getElementById('ws-input');
+  if(wta){ wta.value = ch.content||''; }
+  // Switch to PR page
+  goPage('pr');
+  // Show pr-input-area if hidden
+  const inputArea = document.getElementById('pr-input-area');
+  const annWrap = document.getElementById('pr-ann-wrap');
+  if(inputArea) inputArea.style.display='flex';
+  if(annWrap) annWrap.style.display='none';
+  renderDrawer();
+  // Auto-save content back when textarea changes
+  if(ta){ ta.oninput = ()=>saveChapterContent(id, ta.value); }
+  notify('已載入：'+escH(ch.title||'章節'));
+  // Close drawer on small screens
+  if(window.innerWidth < 900) toggleDrawer();
+}
+
+function saveChapterContent(id, content){
+  const book = getCurBook(); if(!book) return;
+  const ch = findChapter(book.chapters||[], id);
+  if(ch){ ch.content = content; saveBooks(); }
+}
+
+function addChapter(parentId, depth, e){
+  if(e) e.stopPropagation();
+  const book = getCurBook(); if(!book){ notify('請先選取書本'); return; }
+  const id = 'ch_' + Date.now();
+  const newCh = { id, title:'新章節', content:'', children:[], _open:false };
+  if(!parentId || depth===0){
+    if(!book.chapters) book.chapters=[];
+    book.chapters.push(newCh);
+  } else {
+    const parent = findChapter(book.chapters||[], parentId);
+    if(parent){ if(!parent.children) parent.children=[]; parent.children.push(newCh); parent._open=true; }
+  }
+  saveBooks(); renderDrawer();
+  // Auto rename
+  setTimeout(()=>renameChapter(id, null), 50);
+}
+
+function renameChapter(id, e){
+  if(e) e.stopPropagation();
+  const nameEl = document.getElementById('chname-'+id);
+  if(!nameEl) return;
+  const book = getCurBook(); if(!book) return;
+  const ch = findChapter(book.chapters||[], id);
+  if(!ch) return;
+  const cur = ch.title||'';
+  nameEl.innerHTML = `<input class="ch-name-input" id="ch-inp-${id}" value="${escH(cur)}" onclick="event.stopPropagation()">`;
+  const inp = document.getElementById('ch-inp-'+id);
+  if(inp){ inp.focus(); inp.select();
+    inp.onblur = ()=>{ ch.title=inp.value||'未命名章節'; saveBooks(); renderDrawer(); };
+    inp.onkeydown = (ev)=>{ if(ev.key==='Enter'){ ch.title=inp.value||'未命名章節'; saveBooks(); renderDrawer(); } if(ev.key==='Escape') renderDrawer(); };
+  }
+}
+
+function deleteChapter(id, e){
+  e.stopPropagation();
+  const book = getCurBook(); if(!book) return;
+  if(!confirm('確定刪除此章節及其子章節？')) return;
+  function removeFrom(nodes){ return nodes.filter(n=>{ if(n.id===id) return false; if(n.children) n.children=removeFrom(n.children); return true; }); }
+  book.chapters = removeFrom(book.chapters||[]);
+  if(window._activeChId===id) window._activeChId=null;
+  saveBooks(); renderDrawer();
+}
+
+function getCurBook() { return books.find(b=>b.id===curBookId)||null; }
+
+function setCurBook(id) {
+  curBookId = id;
+  const book = getCurBook();
+  const btn = document.getElementById('cur-book-btn');
+  if (book) {
+    btn.textContent = '📖 ' + book.title;
+    btn.style.display = '';
+    btn.classList.add('active');
+  } else {
+    btn.style.display = 'none';
+    btn.classList.remove('active');
+  }
+  // Update drawer
+  renderDrawer();
+  // Update all book headers
+  ['pr','rep','ws','ana'].forEach(pg => {
+    const hdr = document.getElementById(pg+'-book-hdr');
+    if (!hdr) return;
+    if (book) {
+      hdr.style.display = 'flex';
+      hdr.innerHTML = `<div class="book-hdr-name">${escH(book.title)}</div>
+        <div class="book-hdr-meta">${book.genre} · ${{short:'短篇',mid:'中篇',long:'長篇'}[book.len]||''}</div>
+        <button class="btn btn-g sm" style="margin-left:auto" onclick="goPage('shelf')">換書</button>`;
+    } else {
+      hdr.style.display = 'none';
+    }
+  });
+  // Inject book chars into workshop
+  refreshBookChars();
+}
+
+function refreshBookChars() {
+  const book = getCurBook();
+  // Store book chars globally for safe access (avoids JSON escaping in onclick)
+  window._bookChars = (book && book.chars) ? book.chars : [];
+  ['dl','pt'].forEach(ns => {
+    const wrap = document.getElementById(ns+'-chars-from-book');
+    const chips = document.getElementById(ns+'-char-chips');
+    if (!wrap||!chips) return;
+    if (book && book.chars && book.chars.length) {
+      wrap.style.display = 'block';
+      chips.innerHTML = book.chars.map((c,idx) =>
+        `<button class="cbadge" id="${ns}-cbadge-${idx}" onclick="toggleBookChar('${ns}',${idx})">${escH(c.name)}</button>`
+      ).join('');
+    } else {
+      wrap.style.display = 'none';
+    }
+  });
+}
+
+function toggleBookChar(ns, idx) {
+  const c = (window._bookChars||[])[idx];
+  if (!c) return;
+  // Toggle highlight on badge
+  const badge = document.getElementById(ns+'-cbadge-'+idx);
+  // Check if already added by looking for a card with data-cid matching name
+  const existing = document.querySelector('#'+ns+'-chars .chcard[data-cid="'+c.name.replace(/"/g,'&quot;')+'"]');
+  if (existing) {
+    existing.remove();
+    if (badge) badge.classList.remove('on');
+    return;
+  }
+  if (badge) badge.classList.add('on');
+  const addFn = ns==='dl' ? addDLChar : addPTChar;
+  addFn(c);
+}
+
+// ══════════════════════════════════════════
+// BOOK MODAL
+// ══════════════════════════════════════════
+let editingBookId = null;
+let bookModalLen = 'short';
+let bookCharCount = 0;
+
+function openBookModal(id=null) {
+  editingBookId = id;
+  bookCharCount = 0;
+  document.getElementById('bm-chars').innerHTML = '';
+  if (id) {
+    const b = books.find(x=>x.id===id);
+    if (b) {
+      document.getElementById('bm-title').value = b.title||'';
+      document.getElementById('bm-genre').value = b.genre||'古風／武俠';
+      document.getElementById('bm-desc').value = b.desc||'';
+      setBookLen(b.len||'short');
+      document.getElementById('book-modal-title').textContent = '編輯書本';
+      (b.chars||[]).forEach(c => addBookChar(c));
+    const povVal = b.pov||'third_close';
+    const povEl = document.querySelector(`input[name="bm-pov"][value="${povVal}"]`);
+    if(povEl) povEl.checked=true;
+    }
+  } else {
+    document.getElementById('bm-title').value = '';
+    document.getElementById('bm-desc').value = '';
+    setBookLen('short');
+    document.getElementById('book-modal-title').textContent = '新增書本';
+  }
+  document.getElementById('book-modal').classList.add('on');
+}
+function closeBookModal() { document.getElementById('book-modal').classList.remove('on'); }
+function setBookLen(l) {
+  bookModalLen = l;
+  document.querySelectorAll('.len-card').forEach(c => c.classList.toggle('on', c.dataset.len===l));
+}
+
+function addBookChar(preset={}) {
+  bookCharCount++;
+  const id = 'bmc'+bookCharCount;
+  const div = document.createElement('div');
+  div.className = 'chcard'; div.id = id;
+  div.innerHTML = `
+    <div class="chhd">
+      <span class="chlbl">角色 ${bookCharCount}</span>
+      <button class="chdel" onclick="document.getElementById('${id}').remove()">✕</button>
+    </div>
+    <div class="chgrid">
+      <div><label>姓名</label><input class="inp" placeholder="姓名" value="${escA(preset.name||'')}"></div>
+      <div><label>性別</label><input class="inp" placeholder="男／女" value="${escA(preset.gender||'')}"></div>
+      <div><label>性格</label><input class="inp" placeholder="傲嬌、溫柔……" value="${escA(preset.personality||'')}"></div>
+      <div><label>身份</label><input class="inp" placeholder="主角、反派……" value="${escA(preset.role||'')}"></div>
+      <div style="grid-column:span 2"><label>說話方式</label><input class="inp" style="width:100%" placeholder="文雅古典、江湖粗獷……" value="${escA(preset.speech||'')}"></div>
+      <div style="grid-column:span 2"><label>背景故事（選填）</label><input class="inp" style="width:100%" placeholder="簡短背景……" value="${escA(preset.bg||'')}"></div>
+    </div>`;
+  document.getElementById('bm-chars').appendChild(div);
+}
+
+function saveBook() {
+  const title = document.getElementById('bm-title').value.trim();
+  if (!title) { notify('請輸入書名'); return; }
+  const chars = [...document.querySelectorAll('#bm-chars .chcard')].map(card => {
+    const inp = card.querySelectorAll('input');
+    return { name:inp[0]?.value, gender:inp[1]?.value, personality:inp[2]?.value, role:inp[3]?.value, speech:inp[4]?.value, bg:inp[5]?.value };
+  }).filter(c=>c.name);
+
+  if (editingBookId) {
+    const b = books.find(x=>x.id===editingBookId);
+    if (b) { b.title=title; b.len=bookModalLen; b.genre=document.getElementById('bm-genre').value; b.desc=document.getElementById('bm-desc').value; b.chars=chars; b.pov=document.querySelector('input[name="bm-pov"]:checked')?.value||'third_close'; }
+  } else {
+    books.push({ id:'book'+Date.now(), title, len:bookModalLen, genre:document.getElementById('bm-genre').value, desc:document.getElementById('bm-desc').value, chars, pov:document.querySelector('input[name="bm-pov"]:checked')?.value||'third_close', created:Date.now() });
+  }
+  saveBooks();
+  closeBookModal();
+  renderShelf();
+  notify('✦ 已儲存書本');
+}
+
+function deleteBook(id) {
+  if (!confirm('確定刪除此書本？')) return;
+  books = books.filter(b=>b.id!==id);
+  if (curBookId===id) { curBookId=null; setCurBook(null); }
+  saveBooks();
+  renderShelf();
+}
+
+// ══════════════════════════════════════════
+// SHELF
+// ══════════════════════════════════════════
+function renderShelf() {
+  const shelf = document.getElementById('bookshelf');
+  const SPINE_COLORS = ['#c0392b','#c8780a','#1a6b5a','#7a46aa','#2060a0','#8a4020'];
+  let html = '';
+  books.forEach((b,i) => {
+    const col = SPINE_COLORS[i % SPINE_COLORS.length];
+    const lenLabel = {short:'短篇',mid:'中篇',long:'長篇'}[b.len]||'';
+    html += `<div class="bookcard${curBookId===b.id?' active':''}" onclick="selectBook('${b.id}')">
+      <div class="book-spine" style="background:${col}"></div>
+      <div class="book-body">
+        <div class="book-title">${escH(b.title)}</div>
+        <div class="book-meta">${escH(b.genre)}<br>${lenLabel} · ${b.chars?.length||0} 個角色<br><span style="font-size:9px;color:var(--ink5);letter-spacing:1px">${{first:'第一人稱',third_close:'第三人稱（貼近）',third_omni:'第三人稱（全知）',second:'第二人稱'}[b.pov]||'第三人稱'}</span></div>
+        <div style="display:flex;gap:4px;margin-top:8px">
+          <button class="btn btn-g sm" style="flex:1;font-size:9px" onclick="event.stopPropagation();openBookModal('${b.id}')">編輯</button>
+          <button class="btn btn-g sm" style="font-size:9px;color:var(--redl)" onclick="event.stopPropagation();deleteBook('${b.id}')">刪除</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `<div class="book-new" onclick="openBookModal()"><div class="book-new-icon">＋</div><div>新增書本</div></div>`;
+  shelf.innerHTML = html;
+}
+
+function selectBook(id) {
+  setCurBook(id);
+  renderShelf();
+  goPage('pr');
+  notify('✦ 已選擇：' + getCurBook()?.title);
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(n=>n.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  const btn = document.querySelector(`[data-pg="${id}"]`);
+  if (btn) btn.classList.add('on');
+  closePopup();
+}
+
+// ══════════════════════════════════════════
+// AI CALL
+// ══════════════════════════════════════════
+async function callAI(sys, user, msg='處理中……', maxTok=4000) {
+  const ldg=document.getElementById('ldg');
+  const ltxt=document.getElementById('ltxt');
+  if(ltxt) ltxt.textContent=msg;
+  if(ldg) ldg.classList.add('on');
+
+  try {
+    const p=curProvider, prov=PROVIDERS[p];
+    const key=apiKeys[p]||'';
+    const model = p==='custom' ? customModel : getCurModel();
+    if(!key && p!=='custom') throw new Error('請先設定 API Key');
+    let url=prov.url, headers={'Content-Type':'application/json'}, body;
+    if(prov.fmt==='claude'){
+      headers['x-api-key']=key;
+      headers['anthropic-version']='2023-06-01';
+      headers['anthropic-dangerous-direct-browser-inaccessible']='false';
+      body=JSON.stringify({model,max_tokens:maxTok,system:sys,messages:[{role:'user',content:user}]});
+    } else if(prov.fmt==='gemini'){
+      url=prov.url.replace('{model}',model).replace('{key}',key);
+      body=JSON.stringify({
+        system_instruction:{parts:[{text:sys}]},
+        contents:[{role:'user',parts:[{text:user}]}],
+        generationConfig:{maxOutputTokens:maxTok,temperature:0.8}
+      });
+    } else {
+      headers['Authorization']='Bearer '+key;
+      if(p==='custom') url=customURL;
+      const isGPT5 = model.startsWith('gpt-5') || model.startsWith('o3') || model.startsWith('o4');
+      const tokKey = isGPT5 ? 'max_completion_tokens' : 'max_tokens';
+      body=JSON.stringify({model,[tokKey]:maxTok,messages:[{role:'system',content:sys},{role:'user',content:user}]});
+    }
+
+    // Plain fetch - no timeout, let the browser wait naturally
+    const r = await fetch(url, {method:'POST', headers, body})
+      .catch(fetchErr => {
+        const isCors = (p==='openai'||p==='gemini');
+        if(isCors) throw new Error(`瀏覽器 CORS 限制，無法直接呼叫 ${prov.name}。\n→ 請查看 AI 設定中的「使用說明」`);
+        throw new Error(`網路錯誤：${fetchErr.message}`);
+      });
+
+    // Read as text first to detect HTML error pages
+    const rawText = await r.text();
+    if(rawText.trimStart().startsWith('<')){
+      const isCors = (p==='openai'||p==='gemini');
+      if(isCors) throw new Error(`收到 HTML 回應，可能是 CORS 限制。\n→ 請查看 AI 設定中的「使用說明」`);
+      throw new Error(`API 回傳非預期內容，請檢查 API Key 與模型名稱`);
+    }
+    if(!r.ok){
+      let errMsg = `HTTP ${r.status}`;
+      try{ const ed=JSON.parse(rawText); errMsg=ed.error?.message||ed.message||errMsg; }catch(e){}
+      if(r.status===401) throw new Error('API Key 無效或已過期，請重新設定');
+      if(r.status===429) throw new Error('請求過於頻繁，請稍後再試（Rate Limit）');
+      if(r.status===403) throw new Error('API Key 無權限使用此模型，請確認帳戶狀態');
+      throw new Error(errMsg);
+    }
+
+    const d = JSON.parse(rawText);
+    let text='';
+    if(prov.fmt==='claude') text=(d.content||[]).map(i=>i.text||'').join('');
+    else if(prov.fmt==='gemini') text=d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    else text=d.choices?.[0]?.message?.content||'';
+    if(!text && d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+    if(!text) throw new Error('AI 回傳空白內容，請重試');
+    text=text.trim();
+    if(text.startsWith('```')) {
+      text=text.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'').trim();
+    }
+    return text;
+  } finally {
+    if(ldg) ldg.classList.remove('on');
+  }
+}
+
+// ══════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════
+function openSettings(){
+  document.getElementById('setpanel').classList.add('open');
+  document.getElementById('set-overlay').style.display='block';
+  renderProvConfig();
+}
+function closeSettings(){
+  document.getElementById('setpanel').classList.remove('open');
+  document.getElementById('set-overlay').style.display='none';
+}
+function setProvider(p){
+  curProvider=p; saveAISettings();
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('on',t.dataset.prov===p));
+  renderProvConfig();
+  renderCorsTips(p);
+}
+
+const CORS_TIPS = {
+  claude: `<span style="color:var(--tealx)">✓ Claude 支援瀏覽器直接呼叫</span><br>
+· API Key 僅儲存於本機，不會上傳<br>
+· 建議使用 claude-sonnet-4-5 模型<br>
+· 長文章建議分段批校，效果更佳`,
+
+  openai: `<span style="color:var(--amber)">⚠ OpenAI 的 GPT-5.x 系列有 CORS 限制</span><br>
+· 若出現 Failed to fetch，是瀏覽器安全限制，非 Key 錯誤<br>
+· <strong style="color:var(--ink3)">解決方法①</strong>：改用 Chrome，安裝 <a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" target="_blank" style="color:var(--amberl)">Allow CORS 擴充功能</a> 後開啟<br>
+· <strong style="color:var(--ink3)">解決方法②</strong>：改用 <span style="color:var(--amberl)">DeepSeek / Groq</span>（CORS 友好，且免費）<br>
+· <strong style="color:var(--ink3)">解決方法③</strong>：用本地 proxy（進階）`,
+
+  gemini: `<span style="color:var(--amber)">⚠ Gemini 3.x 預覽版可能有 CORS 限制</span><br>
+· 若失敗，先試 <span style="color:var(--amberl)">gemini-2.5-pro</span>（CORS 更穩定）<br>
+· 確認 AI Studio 已啟用 Generative Language API<br>
+· <strong style="color:var(--ink3)">解決方法</strong>：同 OpenAI，安裝 Allow CORS 擴充功能<br>
+· API Key 格式：AIza 開頭的字串`,
+
+  groq: `<span style="color:var(--tealx)">✓ Groq 支援瀏覽器直接呼叫（CORS 友好）</span><br>
+· 免費額度大，速度極快，推薦作為替代方案<br>
+· 推薦模型：llama-3.3-70b-versatile`,
+
+  deepseek: `<span style="color:var(--tealx)">✓ DeepSeek 支援瀏覽器直接呼叫</span><br>
+· deepseek-chat 性價比極高，中文表現佳<br>
+· deepseek-reasoner 適合需要深度推理的任務`,
+
+  custom: `· 自訂端點需自行確保 CORS 設定正確<br>
+· 本地 LLM（如 Ollama）預設允許跨域呼叫<br>
+· Ollama 端點：http://localhost:11434/v1/chat/completions`
+};
+
+function renderCorsTips(p){
+  const el = document.getElementById('cors-tips');
+  if (!el) return;
+  el.innerHTML = CORS_TIPS[p] || '';
+}
+function renderProvConfig(){
+  const p=curProvider, prov=PROVIDERS[p], key=apiKeys[p]||'';
+  let html='';
+  if(p==='custom'){
+    html+=`<div><div class="slbl" style="margin-bottom:4px">端點 URL</div>
+      <input class="key-inp" id="custom-url" value="${escA(customURL)}" placeholder="https://..." style="width:100%"></div>
+    <div><div class="slbl" style="margin-bottom:4px">模型名稱</div>
+      <input class="key-inp" id="custom-model" value="${escA(customModel)}" placeholder="llama3, mistral…"></div>`;
+  } else {
+    html+=`<div><div class="slbl" style="margin-bottom:4px">選擇模型</div>
+      <select class="fsel" id="model-sel" style="width:100%">
+        ${prov.models.map(m=>`<option value="${m}">${m}</option>`).join('')}
+      </select></div>`;
+  }
+  html+=`<div><div class="slbl" style="margin-bottom:4px">API Key</div>
+    <div class="key-row">
+      <input class="key-inp" id="key-inp" type="password" value="${escA(key)}" placeholder="貼入 API Key" oninput="onKeyChange()">
+      <button class="key-eye" onclick="toggleKeyVis()">👁</button>
+    </div>`;
+  if(prov.apiLink){
+    html+=`<a class="api-link" href="${prov.apiLink}" target="_blank">↗ 前往 ${prov.apiName} 取得 API Key</a>`;
+  }
+  html+=`</div>`;
+  document.getElementById('prov-config').innerHTML=html;
+  if(p==='custom'){
+    document.getElementById('custom-url').addEventListener('input',e=>{customURL=e.target.value;saveAISettings();});
+    document.getElementById('custom-model').addEventListener('input',e=>{customModel=e.target.value;saveAISettings();});
+  }
+  renderCorsTips(p);
+}
+function onKeyChange(){
+  const v=document.getElementById('key-inp')?.value||'';
+  apiKeys[curProvider]=v; saveAISettings();
+}
+function toggleKeyVis(){
+  const inp=document.getElementById('key-inp');
+  if(inp) inp.type=inp.type==='password'?'text':'password';
+}
+async function testConn(){
+  const res=document.getElementById('test-result');
+  res.textContent='連線中……'; res.style.color='var(--ink4)';
+  try{
+    await callAI('你是助手。','只回覆「連線成功」四個字。','測試連線中……',20);
+    res.style.color='var(--tealx)'; res.textContent='✓ 連線成功';
+  }catch(e){
+    const msg = e.message||String(e);
+    const isCors = msg.includes('fetch') || msg.includes('CORS') || msg.includes('NetworkError') || msg.includes('network');
+    if(isCors && (curProvider==='openai'||curProvider==='gemini')){
+      res.style.color='var(--amber)';
+      res.innerHTML='⚠ CORS 限制：瀏覽器阻擋跨域請求<br><span style="color:var(--ink5)">請查看下方「使用說明」解決方法</span>';
+    } else {
+      res.style.color='var(--redl)'; res.textContent='✗ 失敗：'+msg;
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+
+// ── POV helper ──
+function getPOVDesc(){
+  const b = getCurBook();
+  const map = {
+    first:       '第一人稱（以「我」為視角，描寫主角的直接感受與內心）',
+    third_close: '第三人稱貼近視角（跟隨主角，以「她／他」敘述，帶主角主觀感受）',
+    third_omni:  '第三人稱全知視角（上帝視角，可描寫多角色內心及全局情況）',
+    second:      '第二人稱（以「你」為視角）',
+  };
+  return map[b?.pov||'third_close'] || map.third_close;
+}
+// IGNORE WORDS
+// ══════════════════════════════════════════
+let ignoreWords={sr:[],fr:[]};
+// Load from localStorage
+try{const saved=JSON.parse(localStorage.getItem('novelai_ignore')||'{}'); if(saved.sr)ignoreWords.sr=saved.sr; if(saved.fr)ignoreWords.fr=saved.fr;}catch(e){}
+function saveIgnore(){localStorage.setItem('novelai_ignore',JSON.stringify(ignoreWords));}
+
+function addIgnore(ns){
+  const inp=document.getElementById(ns+'-ignore-in');
+  const raw=(inp.value||'').trim();
+  if(!raw){return;}
+  // Support batch: split by 、，, comma, space
+  const words = raw.split(/[、，,\s]+/).map(w=>w.trim()).filter(w=>w);
+  let added=0;
+  for(const w of words){
+    if(!ignoreWords[ns].includes(w)){ ignoreWords[ns].push(w); added++; }
+  }
+  inp.value='';
+  saveIgnore();
+  renderIgnoreTags(ns);
+  if(added>1) notify(`已加入 ${added} 個忽略詞`);
+}
+function removeIgnore(ns,w){
+  ignoreWords[ns]=ignoreWords[ns].filter(x=>x!==w);
+  saveIgnore();
+  renderIgnoreTags(ns);
+}
+function clearIgnore(ns){
+  if(!confirm('確定清空所有忽略詞？')) return;
+  ignoreWords[ns]=[];
+  saveIgnore();
+  renderIgnoreTags(ns);
+}
+function renderIgnoreTags(ns){
+  const el=document.getElementById(ns+'-ignore-tags');
+  if(!el) return;
+  if(!ignoreWords[ns].length){
+    el.innerHTML='<span style="font-size:10px;color:var(--ink5);letter-spacing:1px">（尚無忽略詞）</span>';
+    return;
+  }
+  el.innerHTML=ignoreWords[ns].map(w=>
+    `<span class="itag">${escH(w)}<button onclick="removeIgnore('${ns}','${escA(w)}')" title="移除">✕</button></span>`
+  ).join('')+`<button class="btn btn-g sm" style="font-size:9px;padding:2px 6px;margin-left:4px" onclick="clearIgnore('${ns}')">清空</button>`;
+}
+// Init tags on load
+document.addEventListener('DOMContentLoaded',()=>{renderIgnoreTags('sr');renderIgnoreTags('fr');});
+
+// ══════════════════════════════════════════
+// POPUP
+// ══════════════════════════════════════════
+let popAnnEl=null, popPage='', popIssue=null;
+function normalizeSuggestion(item, i=0){
+  if(typeof item==='string') return {label:`方案${i+1}`, text:item};
+  if(item && typeof item==='object'){
+    const text = String(item.text ?? item.value ?? item.suggestion ?? '').trim();
+    const label = String(item.label ?? `方案${i+1}`).trim() || `方案${i+1}`;
+    return {label, text};
+  }
+  return {label:`方案${i+1}`, text:''};
+}
+function normalizeSuggestions(list){
+  return (list||[]).map((item,i)=>normalizeSuggestion(item,i)).filter(s=>s.text);
+}
+function suggestionText(item){
+  return normalizeSuggestion(item).text;
+}
+function suggestionLabel(item, fallback='方案'){
+  return normalizeSuggestion(item).label || fallback;
+}
+function suggestionSummary(list){
+  return normalizeSuggestions(list).map(s=>`${s.label}：${s.text}`).join('、');
+}
+function closePopup(){
+  document.getElementById('popup').classList.remove('on');
+  if(popAnnEl){try{popAnnEl.classList.remove('hi')}catch(e){}} popAnnEl=null;
+}
+document.addEventListener('click',e=>{
+  const pop=document.getElementById('popup');
+  if(pop.classList.contains('on')&&!pop.contains(e.target)&&!e.target.classList.contains('ann'))closePopup();
+});
+function openPopup(annEl,issue,e){
+  closePopup(); popAnnEl=annEl; popIssue=issue; annEl.classList.add('hi');
+  const LBLS={red:{cls:'red',text:'錯字'},amber:{cls:'amber',text:'詞義'},teal:{cls:'teal',text:'重複'},purple:{cls:'purple',text:'標點'}};
+  const lbl=LBLS[issue.type]||{cls:'amber',text:'問題'};
+  const bdg=document.getElementById('pop-bdg');
+  bdg.className='popbdg '+lbl.cls; bdg.textContent=issue.typeLabel||lbl.text;
+  document.getElementById('pop-txt').textContent=issue.problem||'';
+  const reasonElW = document.getElementById('pop-reason');
+  if(reasonElW) reasonElW.style.display='none';
+  const qEl=document.getElementById('pop-q');
+  if(issue.quote){qEl.textContent=issue.quote;qEl.style.display='block';}else qEl.style.display='none';
+  const sugs=normalizeSuggestions(issue.suggestions||(issue.suggestion?[issue.suggestion]:[]));
+  renderPopupSugs(sugs);
+  document.getElementById('pop-ok').onclick=()=>sugs.length?acceptSug(sugs[0]):ignoreAnn();
+  document.getElementById('pop-ok').textContent=sugs.length?`接受${suggestionLabel(sugs[0], '方案1')}`:'標記完成';
+  // Reset reply
+  const rta=document.getElementById('pop-reply-ta');
+  const rres=document.getElementById('pop-reply-result');
+  if(rta)rta.value='';
+  if(rres){rres.style.display='none';rres.textContent='';}
+  positionPopup(annEl);
+  document.getElementById('popup').classList.add('on');
+}
+function renderPopupSugs(sugs){
+  const el = document.getElementById('pop-sugs');
+  // Store sugs for event delegation
+  const normalized = normalizeSuggestions(sugs);
+  el._sugs = normalized;
+  el.innerHTML = normalized.map((s,i)=>
+    `<div class="popsug" data-pi="${i}">
+      <span class="popsug-n">${escH(s.label || `方案${i+1}`)}</span><span class="popsug-t">${escH(s.text)}</span></div>`
+  ).join('');
+  el.onclick = function(e){
+    const btn = e.target.closest('.popsug');
+    if (!btn) return;
+    const i = parseInt(btn.dataset.pi);
+    const sug = (el._sugs||[])[i];
+    if (sug) acceptSug(sug);
+  };
+}
+const REPLY_SYS=`你是專業小說編輯。原文詞語：「{ORIG}」，問題：{PROB}，現有建議：{SUGS}
+用家說：「{REPLY}」
+請根據用家的感受重新評估，給出2個更符合的修改建議。
+輸出純 JSON（無其他文字）：{"ok":true|false,"comment":"簡短評估（20字內）","suggestions":["新建議1","新建議2"]}`;
+async function sendPopupReply(){
+  if(!popIssue)return;
+  const ta=document.getElementById('pop-reply-ta');
+  const reply=(ta?.value||'').trim();
+  if(!reply){notify('請輸入你的想法');return;}
+  const rres=document.getElementById('pop-reply-result');
+  rres.style.display='block'; rres.textContent='AI 重新分析中……';
+  const sugs=suggestionSummary(popIssue.suggestions||[]);
+  const sys=REPLY_SYS
+    .replace('{ORIG}',popIssue.targetText||'')
+    .replace('{PROB}',popIssue.problem||'')
+    .replace('{SUGS}',sugs)
+    .replace('{REPLY}',reply);
+  try{
+    const raw=await callAI(sys,'請回覆','重新分析中……',200);
+    let p;try{p=JSON.parse(raw);}catch(e){throw new Error('解析失敗');}
+    rres.textContent=p.comment||'';
+    if(p.suggestions&&p.suggestions.length){
+      popIssue.suggestions=normalizeSuggestions(p.suggestions);
+      renderPopupSugs(popIssue.suggestions);
+      document.getElementById('pop-ok').onclick=()=>acceptSug(popIssue.suggestions[0]);
+      document.getElementById('pop-ok').textContent=`接受${suggestionLabel(popIssue.suggestions[0], '新方案1')}`;
+    }
+    positionPopup(popAnnEl);
+  }catch(e){
+    rres.textContent='分析失敗，請重試';
+  }
+}
+function positionPopup(el){
+  const pop=document.getElementById('popup');
+  pop.style.visibility='hidden'; pop.style.display='block';
+  const pw=pop.offsetWidth||300, ph=pop.offsetHeight||280;
+  pop.style.visibility=''; pop.style.display='';
+  const r=el.getBoundingClientRect();
+  let left=r.left, top=r.bottom+8;
+  if(left+pw>window.innerWidth-8) left=window.innerWidth-pw-8;
+  if(left<8) left=8;
+  if(top+ph>window.innerHeight-8) top=r.top-ph-8;
+  if(top<8) top=8;
+  pop.style.left=left+'px'; pop.style.top=top+'px';
+}
+function acceptSug(sug){
+  if(!popAnnEl||!popIssue)return;
+  const orig=popIssue.targetText;
+  const txt=suggestionText(sug);
+  if(!txt) return;
+  const taMap={pr:'pr-ta',dl:'dl-ta'};
+  const taId=taMap[popPage];
+  if(taId){const ta=document.getElementById(taId);if(ta)ta.value=ta.value.split(orig).join(txt);}
+  document.querySelectorAll(`.ann[data-id="${popIssue.id}"]`).forEach(el=>{el.textContent=txt;el.classList.add('done');});
+  popIssue.resolved=true; closePopup(); updateIssueCard(popIssue.id);
+}
+function ignoreAnn(){
+  if(popAnnEl)popAnnEl.classList.add('done');
+  if(popIssue){popIssue.resolved=true;updateIssueCard(popIssue.id);}
+  closePopup();
+}
+function updateIssueCard(id){
+  const c=document.getElementById('card-'+id);
+  if(c)c.classList.add('done');
+}
+function scrollToAnn(id,bodyId){
+  const el=document.querySelector(`#${bodyId} .ann[data-id="${id}"]`);
+  if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('lit');setTimeout(()=>el.classList.remove('lit'),1500);}
+}
+
+// ══════════════════════════════════════════
+// RENDER ANNOTATED
+// ══════════════════════════════════════════
+function renderAnnotated(ns,txt,issues,bodyId,listId){
+  const wordMap=new Map();
+  for(const iss of issues){if(iss.targetText&&!wordMap.has(iss.targetText))wordMap.set(iss.targetText,iss);}
+  const targets=[...wordMap.keys()].sort((a,b)=>b.length-a.length);
+  let html='';
+  if(!targets.length){
+    html=escH(txt);
+  } else {
+    let segs=[{t:txt,ann:false}];
+    for(const word of targets){
+      const iss=wordMap.get(word);
+      const next=[];
+      for(const seg of segs){
+        if(seg.ann){next.push(seg);continue;}
+        const parts=seg.t.split(word);
+        for(let i=0;i<parts.length;i++){
+          if(parts[i])next.push({t:parts[i],ann:false});
+          if(i<parts.length-1)next.push({t:word,ann:true,iss});
+        }
+      }
+      segs=next;
+    }
+    for(const seg of segs){
+      if(seg.ann) html+=`<span class="ann ${seg.iss.type}" data-id="${seg.iss.id}" onclick="annClick_${ns}(this,event)">${escH(seg.t)}</span>`;
+      else html+=escH(seg.t);
+    }
+  }
+  document.getElementById(bodyId).innerHTML=html.replace(/\n/g,'<br>');
+  document.getElementById(listId).innerHTML=issues.length
+    ?issues.map((iss,i)=>`
+      <div class="ic ${iss.type}" id="card-${iss.id}" onclick="scrollToAnn('${iss.id}','${bodyId}')">
+        <div class="ict"><span class="icn">#${i+1}</span><span class="icb">${escH(iss.typeLabel||iss.speaker||'')}</span></div>
+        <div class="icex">「<mark>${escH((iss.targetText||'').slice(0,20))}${(iss.targetText||'').length>20?'…':''}</mark>」</div>
+        <div class="icd">${escH((iss.problem||'').slice(0,50))}${(iss.problem||'').length>50?'…':''}</div>
+      </div>`).join('')
+    :'<div class="empty"><p>✦ 無問題</p></div>';
+}
+function annClick_pr(el,e){popPage='pr';const iss=prIssues.find(i=>i.id===el.dataset.id);if(iss)openPopup(el,iss,e);}
+function annClick_dl(el,e){popPage='dl';const iss=dlIssues.find(i=>i.id===el.dataset.id);if(iss)openPopup(el,iss,e);}
+
+// ══════════════════════════════════════════
+// PAGE: 批校潤稿
+// ══════════════════════════════════════════
+let prMode='word', prIssues=[];
+function setPRMode(m){
+  prMode=m;
+  document.querySelectorAll('#pr-mode-chips .chip').forEach(c=>c.classList.toggle('on',c.dataset.mode===m));
+  const hint = document.getElementById('pr-ctx-hint');
+  if(hint) hint.style.display = m==='ctx' ? 'block' : 'none';
+}
+let prCtxSelection = ''; // the selected sentence for ctx mode
+function onPRTaSelect(){
+  if(prMode!=='ctx') return;
+  const ta = document.getElementById('pr-ta');
+  const sel = ta.value.substring(ta.selectionStart, ta.selectionEnd).trim();
+  prCtxSelection = sel;
+  const disp = document.getElementById('pr-ctx-sel-display');
+  const txt = document.getElementById('pr-ctx-sel-text');
+  if(disp && txt){
+    if(sel){ disp.style.display='block'; txt.textContent=sel.length>60?sel.slice(0,60)+'…':sel; }
+    else { disp.style.display='none'; }
+  }
+}
+const PR_CTX_SYS=`你是資深小說潤稿編輯，擅長{G}文風。全文敘事人稱：{POV}。
+用家提供了一段完整小說文本。你的任務不是只看單句，而是先理解全文，再判斷被選句子在當前情節、角色狀態、語境和節奏中的作用。
+
+工作原則：
+1. 優先保持原句在全文中的功能，其次才是文字美化。
+2. 不可新增原文沒有的設定、事件、人物關係或心理資訊。
+3. 不可改變敘事人稱、時間順序、角色立場或情緒方向。
+4. 若原句已可用，方案1可以只做極小幅修整。
+5. 四個方案必須方向明確區分，不可只是近義詞替換。
+
+全文如下：
+===全文開始===
+{FULLTEXT}
+===全文結束===
+
+現在請專注於這一句：
+「{SELECTED}」
+
+請提供 4 個修改方案：
+1. 貼合前後文：優先與上下文自然銜接。
+2. 流暢自然：優先提升順口度與閱讀性。
+3. 文學感提升：優先提升畫面感或語感，但不可脫離原段。
+4. AI最佳方案：不必拘泥於用家原本筆法，由你判斷這句在此文風下最好的寫法，但仍必須保留原意、角色一致性與情境合理性。
+
+輸出前檢查：
+- 是否保留原句核心意思
+- 是否符合全文語境
+- 四個方案是否真的不同
+- 是否有任何方案加入原文沒有的新資訊
+
+輸出純 JSON（無其他文字）：
+{"targetText":"{SELECTED}","reason":"這句目前的主要問題（20字內）","context_note":"這句在全文中的作用（20字內）","suggestions":[{"label":"貼合前後文","text":"方案1"},{"label":"流暢自然","text":"方案2"},{"label":"文學感提升","text":"方案3"},{"label":"AI最佳方案","text":"方案4"}]}
+力度：{D}`;
+
+const PR_WORD_SYS=`你是嚴謹的小說校對編輯，擅長{G}文風。全文敘事人稱：{POV}。
+任務：找出以下文段中真正會影響閱讀、理解、角色一致性、語感或節奏的詞句問題。
+
+標記原則：
+1. red：明顯錯字、別字、搭配錯誤、語意錯誤。
+2. amber：語義模糊、詞義不準、語氣不順，但仍可理解。
+3. teal：不必要重複，且已影響節奏、質感或表達效率。
+4. purple：標點使用不當，已影響停頓、語意或語氣。
+5. 不要為了追求文學感而硬挑問題。
+6. 若一句只是普通但通順自然，不要標記。
+7. targetText 必須完全符合原文中的連續文字，長度 1-6 字，不可含標點，不可改寫後再引用。
+
+修改力度：{D}
+保守：只抓明顯錯誤。
+柔順：抓明顯錯誤與少量可優化處。
+文學：可指出風格提升點，但仍以不改變原意為前提。
+
+輸出前檢查：
+- targetText 是否逐字存在於原文
+- suggestions 是否真的比原文更準確或更自然
+- 是否把純風格差異誤判為錯誤
+
+輸出純 JSON（不要有任何其他文字或代碼塊）：
+{"issues":[{"id":"w1","type":"red|amber|teal|purple","typeLabel":"錯字|詞義誤用|重複詞|標點","targetText":"有問題的詞（1-6字）","problem":"問題說明（20字內）","suggestions":["改法1","改法2"]}]}`;
+
+const PR_SENT_SYS=`你是資深小說潤稿編輯，擅長{G}文風。全文敘事人稱：{POV}。
+以下每行是一個句子，格式為「[編號] 句子內容」。
+
+你的任務是對每一句提供 4 個不同方向的版本。不是單純換同義詞，而是依照不同編輯策略改寫。
+
+改寫原則：
+1. 不得新增原文沒有的設定、事件、世界觀名詞、角色動機或心理活動。
+2. 不得改變敘事人稱、時態、角色關係或情緒方向。
+3. 若原句本身已經成立，保守版只允許極小幅調整。
+4. 四個方案必須風格分明，不可彼此過度相似。
+5. 所有方案都必須比原句更可用，不能為了華麗而犧牲清晰度。
+
+四種方案定義：
+1. 保守版：只修正明顯不順，最大限度保留原句。
+2. 流暢版：改善節奏、斷句與可讀性。
+3. 文學版：提升畫面感、語感或文字質地，但不可偏離情境。
+4. AI最佳版：不必拘泥於原句寫法，由你判斷在此文風下最好的寫法，但必須保留原意並符合上下文常識。
+
+輸出前檢查：
+- 每個編號都必須出現在輸出中
+- 每句必須恰好提供 4 個方案
+- 四個方案不能與原句完全相同
+- 四個方案不能彼此高度重複
+- 若你認為原句已很好，也仍要提供 4 個輕重不同的可用版本
+
+輸出純 JSON（無其他文字）：
+{"sentences":[{"n":編號,"reason":"問題或可提升之處（10字內）","suggestions":[{"label":"保守版","text":"方案1"},{"label":"流暢版","text":"方案2"},{"label":"文學版","text":"方案3"},{"label":"AI最佳版","text":"方案4"}]}]}
+力度：{D}`;
+
+
+async function runPR(){
+  const txt=document.getElementById('pr-ta').value.trim();
+  if(!txt){notify('請先輸入文字');return;}
+
+  // ctx mode: need a selection
+  if(prMode==='ctx'){
+    if(!prCtxSelection){ notify('請先在文本中選取要改進的句子'); return; }
+    const g=document.getElementById('pr-genre').value;
+    const d=document.getElementById('pr-dir').value;
+    try{
+      const sys=PR_CTX_SYS.replace('{G}',g).replace('{D}',d).replace('{POV}',getPOVDesc())
+        .replace('{FULLTEXT}',txt).replace(/\{SELECTED\}/g,prCtxSelection);
+      const raw=await callAI(sys,'請分析','全文上下文分析中……',2000);
+      let p; try{p=JSON.parse(raw);}catch(e){throw new Error('解析失敗，請重試');}
+      // Show result as a single sent popup-style in right panel
+      const listEl=document.getElementById('pr-list');
+      const reason = p.reason||'';
+      const ctxNote = p.context_note||'';
+      const sugs = normalizeSuggestions(p.suggestions||[]);
+      listEl.innerHTML=`<div class="ic amber" style="cursor:default">
+        <div class="ict"><span class="icb">全文上下文</span></div>
+        <div style="font-size:12px;color:var(--ink3);line-height:1.7;padding:5px 7px;background:rgba(0,0,0,0.03);border-left:2px solid var(--line2);border-radius:0 2px 2px 0;margin-bottom:6px">${escH(prCtxSelection)}</div>
+        ${reason?`<div style="font-size:10px;color:var(--accent);letter-spacing:0.5px;margin-bottom:4px">✦ ${escH(reason)}</div>`:''}
+        ${ctxNote?`<div style="font-size:10px;color:var(--ink5);letter-spacing:0.5px;margin-bottom:8px">📖 ${escH(ctxNote)}</div>`:''}
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${sugs.map((s,i)=>`<div class="popsug ctx-sug" data-idx="${i}" style="cursor:pointer;align-items:flex-start">
+            <span class="popsug-n" style="margin-top:2px">${escH(s.label || `方案${i+1}`)}</span>
+            <span class="popsug-t" style="font-size:12px;line-height:1.7;white-space:normal">${escH(s.text)}</span>
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--ink5);letter-spacing:1px">點擊方案即替換原句</div>
+      </div>`;
+      // Store sugs on listEl for access
+      listEl._ctxSugs = sugs;
+      listEl._ctxOriginal = prCtxSelection;
+      // Show right panel — highlight selected sentence in body
+      const bodyEl = document.getElementById('pr-body');
+      // Build HTML with selected sentence highlighted
+      const escapedTxt = escH(txt);
+      const escapedSel = escH(prCtxSelection);
+      const highlightedHtml = escapedTxt
+        .replace(/\n/g,'<br>')
+        .replace(escapedSel, `<span id="ctx-sel-span" style="background:rgba(140,26,40,0.12);border-bottom:2px solid var(--accent);border-radius:1px;padding:1px 0">${escapedSel}</span>`);
+      bodyEl.innerHTML = highlightedHtml;
+      document.getElementById('pr-input-area').style.display='none';
+      document.getElementById('pr-ann-wrap').style.display='flex';
+      document.getElementById('pr-stats').innerHTML='<span class="st"><span style="font-size:11px;color:var(--ink4)">全文上下文模式 · 紅底線 = 選取句子</span></span>';
+      document.getElementById('pr-right-tabs').style.display='none';
+      document.getElementById('pr-ct').textContent='上下文分析';
+
+      // Click to replace — update both ta and body using text replacement
+      listEl.querySelectorAll('.ctx-sug').forEach(el=>{
+        el.onclick=()=>{
+          const idx = parseInt(el.dataset.idx);
+          const newTxt = suggestionText((listEl._ctxSugs||[])[idx]);
+          const orig = listEl._ctxOriginal||prCtxSelection;
+          if(!newTxt) return;
+          // Update textarea
+          const ta=document.getElementById('pr-ta');
+          if(ta){
+            ta.value = ta.value.split(orig).join(newTxt);
+            if(window._activeChId) saveChapterContent(window._activeChId, ta.value);
+          }
+          // Update body: rebuild HTML with new text highlighted
+          const newEscTxt = escH(ta ? ta.value : txt);
+          const newEscSel = escH(newTxt);
+          bodyEl.innerHTML = newEscTxt
+            .replace(/\n/g,'<br>')
+            .replace(newEscSel, `<span id="ctx-sel-span" style="background:rgba(26,92,66,0.1);border-bottom:2px solid var(--tealx);border-radius:1px;padding:1px 0">${newEscSel}</span>`);
+          listEl._ctxOriginal = newTxt;
+          prCtxSelection = newTxt;
+          // Visual feedback on cards
+          listEl.querySelectorAll('.ctx-sug').forEach(s=>s.style.opacity='0.4');
+          el.style.opacity='1'; el.style.background='rgba(26,92,66,0.08)'; el.style.borderColor='var(--tealx)';
+          notify('✓ 已替換');
+        };
+      });
+    }catch(err){ notify('分析失敗：'+(err.message||err)); }
+    return;
+  }
+  const g=document.getElementById('pr-genre').value;
+  const d=document.getElementById('pr-dir').value;
+  try{
+    let wordIssues=[], sentData=[];
+    if(prMode==='word'||prMode==='full'){
+      const sys=PR_WORD_SYS.replace('{G}',g).replace('{D}',d).replace('{POV}',getPOVDesc());
+      const raw=await callAI(sys,txt,'批校詞句中……');
+      let p;
+      try{p=JSON.parse(raw);}catch(e){throw new Error('詞句 JSON 解析失敗，請重試');}
+      wordIssues=(p.issues||[]).map((iss,i)=>({...iss,id:iss.id||'w'+i}));
+    }
+    if(prMode==='sent'||prMode==='full'){
+      // ── 新方案：JS 先切句並編號，一次送完，按編號取回 ──
+      window._cancelAI = false;
+      const origSents = (txt.match(/[^。！？…\n]+[。！？…\n]*/g) || [txt])
+        .map(s=>s.trim()).filter(Boolean);
+
+      const CHUNK = 20; // 每批最多20句，避免太長
+      const ltxtSub = document.getElementById('ltxt-sub');
+      let allResults = []; // indexed by sentence number (1-based)
+      const batches = [];
+      for(let i=0;i<origSents.length;i+=CHUNK) batches.push(origSents.slice(i,i+CHUNK).map((s,j)=>({n:i+j+1,s})));
+
+      for(let bi=0;bi<batches.length;bi++){
+        if(window._cancelAI) throw new Error('已取消');
+        document.getElementById('ltxt').textContent=`整句潤色中（${bi+1}/${batches.length} 批）……`;
+        if(ltxtSub) ltxtSub.textContent=`共 ${origSents.length} 句`;
+        const batch = batches[bi];
+        // Build numbered input
+        const numbered = batch.map(({n,s})=>`[${n}] ${s}`).join('\n');
+        const sysBatch = PR_SENT_SYS.replace('{G}',g).replace('{D}',d).replace('{POV}',getPOVDesc())
+          .replace('{COUNT}', batch.length)
+          .replace('{FROM}', batch[0].n)
+          .replace('{TO}', batch[batch.length-1].n);
+        const raw = await callAI(sysBatch, numbered, `潤色第${batch[0].n}-${batch[batch.length-1].n}句……`, 4000);
+        let p2;
+        try{ p2=JSON.parse(raw); }
+        catch(e){
+          try{
+            let fixed=raw.trim().replace(/^[^{[]+/,'');
+            if(!fixed.endsWith('}')) fixed+=']}';
+            p2=JSON.parse(fixed);
+          }catch(e2){ p2={sentences:[]}; }
+        }
+        for(const r of (p2.sentences||[])){
+          if(r.n) allResults[r.n] = r;
+        }
+      }
+      if(ltxtSub) ltxtSub.textContent='';
+
+      // Map results back to original sentences in order
+      sentData = origSents.map((s,i)=>{
+        const n = i+1;
+        const r = allResults[n];
+        const normalizedSugs = normalizeSuggestions(r?.suggestions||[]);
+        if(r && normalizedSugs.filter(x=>x.text && x.text!==s).length > 0){
+          return { id:'s'+n, targetText:s, reason:r.reason||'', suggestions: normalizedSugs };
+        }
+        // Fallback: keep sentence, mark for display but no suggestions
+        return { id:'s'+n, targetText:s, reason:'', _noChange:true, suggestions:[
+          {label:'保守版', text:s},
+          {label:'流暢版', text:s},
+          {label:'文學版', text:s},
+          {label:'AI最佳版', text:s}
+        ] };
+      });
+    }
+    prIssues=wordIssues;
+    document.getElementById('pr-input-area').style.display='none';
+    document.getElementById('pr-ann-wrap').style.display='flex';
+    // Stats
+    const cnts={red:0,amber:0,teal:0,purple:0};
+    wordIssues.forEach(i=>{if(cnts[i.type]!==undefined)cnts[i.type]++;});
+    let statsHtml=stHTML(cnts.red,cnts.amber,cnts.teal,cnts.purple);
+    if(sentData.length) statsHtml+=`<span class="st" style="margin-left:auto"><span style="font-size:11px;color:var(--ink5)">${sentData.length} 句整句建議</span></span>`;
+    document.getElementById('pr-stats').innerHTML=statsHtml||'<span class="st t"><span class="sd"></span><span style="color:var(--tealx)">詞句無問題</span></span>';
+    // Right panel tabs
+    const tabsEl=document.getElementById('pr-right-tabs');
+    if(prMode==='full'&&sentData.length){
+      tabsEl.style.display='block';
+      document.getElementById('pr-ct').textContent=`${wordIssues.length} 詞句 · ${sentData.length} 整句`;
+    } else {
+      tabsEl.style.display='none';
+      document.getElementById('pr-ct').textContent=prMode==='sent'?`${sentData.length} 句`:`共 ${wordIssues.length} 個問題`;
+    }
+    // Left panel
+    if(prMode==='word'){
+      if(wordIssues.length) renderAnnotated('pr',txt,wordIssues,'pr-body','pr-list');
+      else{
+        document.getElementById('pr-body').innerHTML=escH(txt).replace(/\n/g,'<br>');
+        document.getElementById('pr-list').innerHTML='<div class="empty"><p>✦ 詞句無問題</p></div>';
+      }
+    }
+    if(prMode==='full'){
+      // Word issues go to right list, left panel handled by renderAnnotatedWithSent below
+      if(wordIssues.length) renderAnnotated('pr',txt,wordIssues,'pr-body','pr-list');
+      else{
+        document.getElementById('pr-body').innerHTML=escH(txt).replace(/\n/g,'<br>');
+        document.getElementById('pr-list').innerHTML='<div class="empty"><p>✦ 詞句無問題</p></div>';
+      }
+    }
+    if(prMode==='sent'){
+      if(sentData.length){
+        // Sent mode: mark sentences inline in left panel
+        renderSentMarked(sentData, txt);
+        renderSentCardsRight(sentData);
+      } else {
+        document.getElementById('pr-body').innerHTML=escH(txt).replace(/\n/g,'<br>');
+        document.getElementById('pr-sent-list').innerHTML='<div class="empty"><p>✦ 未能解析整句資料，請重試</p></div>';
+      }
+    }
+    if(prMode==='full'&&sentData.length){
+      // Full mode: sentence suggestions ONLY go to right panel - NO left panel injection
+      renderSentCardsRight(sentData);
+      // Left panel already rendered with word issues above - just add sent-ann marks on top
+      renderAnnotatedWithSent(txt);
+    }
+    if(prMode==='full') setPRRightTab('word');
+  }catch(err){
+    console.error(err);
+    notify('批校失敗：'+(err.message||err));
+    prBack();
+  }
+}
+
+function setPRRightTab(t){
+  document.querySelectorAll('[data-rt]').forEach(b=>b.classList.toggle('on',b.dataset.rt===t));
+  document.getElementById('pr-list').style.display=t==='word'?'flex':'none';
+  document.getElementById('pr-sent-list').style.display=t==='sent'?'flex':'none';
+}
+// renderSentMarked: mark sentences inline in pr-body text (like word annotations)
+// appendMode=true: append marks below existing annotated text (for full mode)
+function renderSentMarked(sentences, origTxt, appendMode=false){
+  window._sentData=sentences;
+  const bodyEl=document.getElementById('pr-body');
+  // Build a marked-up version of the text where each sentence is a clickable span
+  const wordMap=new Map();
+  for(const s of sentences){
+    if(s.targetText&&!wordMap.has(s.targetText)) wordMap.set(s.targetText,s);
+  }
+  const targets=[...wordMap.keys()].sort((a,b)=>b.length-a.length);
+  let segs=[{t:origTxt,ann:false}];
+  for(const word of targets){
+    const iss=wordMap.get(word);
+    const next=[];
+    for(const seg of segs){
+      if(seg.ann){next.push(seg);continue;}
+      const parts=seg.t.split(word);
+      for(let i=0;i<parts.length;i++){
+        if(parts[i])next.push({t:parts[i],ann:false});
+        if(i<parts.length-1)next.push({t:word,ann:true,iss});
+      }
+    }
+    segs=next;
+  }
+  let html='';
+  for(const seg of segs){
+    if(seg.ann){
+      const s=seg.iss;
+      const idx=sentences.indexOf(s);
+      html+=`<span class="ann amber sent-ann" data-si="${idx}" onclick="sentAnnClick(this,event)">${escH(seg.t)}</span>`;
+    } else {
+      html+=escH(seg.t);
+    }
+  }
+  html=html.replace(/\n/g,'<br>');
+  if(appendMode){
+    // Replace existing text with annotated version (word anns already there, re-render on top)
+    // Just replace text nodes, don't double-wrap - use a separator
+    const sep='<div style="height:1px;background:var(--line);margin:8px 0"></div>';
+    // For full mode: re-render the whole body with sent marks layered
+    // Actually: re-render entire body with both word and sent marks together
+    renderAnnotatedWithSent(origTxt);
+  } else {
+    bodyEl.innerHTML=html;
+  }
+}
+
+// For full mode: render text with BOTH word issues AND sentence marks
+function renderAnnotatedWithSent(origTxt){
+  const bodyEl=document.getElementById('pr-body');
+  const sentences=window._sentData||[];
+  const wordIssues=prIssues||[];
+  // Build combined map: word issues (red/amber/teal/purple) + sentence marks (amber sent-ann)
+  let segs=[{t:origTxt,ann:false,type:null}];
+  // First apply sentence marks
+  const sentMap=new Map();
+  for(const s of sentences) if(s.targetText&&!sentMap.has(s.targetText)) sentMap.set(s.targetText,{...s,isSent:true});
+  // Then word issues
+  const wordMap=new Map();
+  for(const iss of wordIssues) if(iss.targetText&&!wordMap.has(iss.targetText)) wordMap.set(iss.targetText,iss);
+  // Process sentence spans first (longer targets first so word issues can override short ones)
+  const allTargets=[...sentMap.keys(),...wordMap.keys()].sort((a,b)=>b.length-a.length);
+  // Deduplicate by keeping the first occurrence
+  const seen=new Set(); const targets=allTargets.filter(t=>!seen.has(t)&&seen.add(t));
+  for(const word of targets){
+    const iss=wordMap.get(word)||sentMap.get(word);
+    const next=[];
+    for(const seg of segs){
+      if(seg.ann){next.push(seg);continue;}
+      const parts=seg.t.split(word);
+      for(let i=0;i<parts.length;i++){
+        if(parts[i])next.push({t:parts[i],ann:false});
+        if(i<parts.length-1)next.push({t:word,ann:true,iss});
+      }
+    }
+    segs=next;
+  }
+  let html='';
+  for(const seg of segs){
+    if(seg.ann){
+      const iss=seg.iss;
+      if(iss.isSent){
+        const idx=sentences.findIndex(s=>s.targetText===seg.t||(s.id&&s.id===iss.id));
+        html+=`<span class="ann amber sent-ann" data-si="${idx}" onclick="sentAnnClick(this,event)">${escH(seg.t)}</span>`;
+      } else {
+        html+=`<span class="ann ${iss.type}" data-id="${iss.id}" onclick="annClick_pr(this,event)">${escH(seg.t)}</span>`;
+      }
+    } else {
+      html+=escH(seg.t);
+    }
+  }
+  bodyEl.innerHTML=html.replace(/\n/g,'<br>');
+}
+
+function sentAnnClick(el, e){
+  e.stopPropagation();
+  closePopup();
+  const i=parseInt(el.dataset.si);
+  const s=window._sentData?.[i];
+  if(!s) return;
+  // Open popup with sentence proposals - clicking accepts inline like word issues
+  const fakeIssue={
+    id:'sent-'+i, type:'amber', typeLabel:'整句',
+    targetText:s.targetText||'',
+    problem:'整句潤色建議',
+    suggestions:s.suggestions||[]
+  };
+  // Temporarily hijack acceptSug for sentence acceptance
+  popPage='pr';
+  popAnnEl=el; popIssue=fakeIssue; el.classList.add('hi');
+  const LBLS={red:{cls:'red',text:'錯字'},amber:{cls:'amber',text:'詞義'},teal:{cls:'teal',text:'重複'},purple:{cls:'purple',text:'標點'}};
+  document.getElementById('pop-bdg').className='popbdg amber';
+  document.getElementById('pop-bdg').textContent='整句潤色';
+  document.getElementById('pop-txt').textContent='選擇潤色方案，即時替換句子';
+  // Show reason if available
+  const reasonEl = document.getElementById('pop-reason');
+  if(reasonEl){
+    if(s.reason){ reasonEl.textContent='✦ '+s.reason; reasonEl.style.display='block'; }
+    else { reasonEl.style.display='none'; }
+  }
+  const qEl=document.getElementById('pop-q');
+  qEl.textContent=s.targetText||''; qEl.style.display='block';
+  const sugs = normalizeSuggestions(s.suggestions||[]);
+  renderPopupSugs(sugs);
+  document.getElementById('pop-ok').onclick=()=>{
+    if(sugs.length) acceptSentInline(i, sugs[0], el);
+  };
+  document.getElementById('pop-ok').textContent=sugs.length?`接受${suggestionLabel(sugs[0], '方案1')}`:'接受方案';
+  // Override popsug clicks for sentence inline accept
+  document.querySelectorAll('#pop-sugs .popsug').forEach((node,j)=>{
+    node.onclick=()=>acceptSentInline(i, sugs[j], el);
+  });
+  const rta=document.getElementById('pop-reply-ta');
+  const rres=document.getElementById('pop-reply-result');
+  if(rta)rta.value='';
+  if(rres){rres.style.display='none';rres.textContent='';}
+  positionPopup(el);
+  document.getElementById('popup').classList.add('on');
+}
+
+function acceptSentInline(i, newTxt, el){
+  const sent=window._sentData?.[i];
+  if(!sent) return;
+  newTxt = suggestionText(newTxt);
+  if(!newTxt) return;
+  const ta=document.getElementById('pr-ta');
+  if(ta) ta.value=ta.value.split(sent.targetText).join(newTxt);
+  // Update ALL sent-ann spans with same data-si
+  document.querySelectorAll(`.sent-ann[data-si="${i}"]`).forEach(span=>{
+    span.textContent=newTxt;
+    span.classList.add('done');
+  });
+  sent.targetText=newTxt;
+  // Mark right card done too
+  const rcard=document.getElementById('sdr-'+i);
+  if(rcard){rcard.style.opacity='0.5';rcard.style.pointerEvents='none';}
+  const doneEl=document.getElementById('sdr-done-'+i);
+  if(doneEl){doneEl.textContent='✓ 已採用';doneEl.style.color='var(--tealx)';}
+  closePopup();
+  notify('✦ 已套用整句修改');
+}
+
+function renderSentCardsRight(sentences){
+  const listEl=document.getElementById('pr-sent-list');
+  listEl._sentences = sentences;
+  listEl.innerHTML=sentences.map((s,i)=>{
+    const isMissing = s._missing || s._noChange;
+    return `
+    <div class="ic ${isMissing?'':'amber'}" id="sdr-${i}" style="cursor:default${isMissing?';opacity:0.45;border-left-color:var(--line3)':''}">
+      <div class="ict">
+        <span class="icn">#${i+1}</span>
+        <span class="icb">${s._noChange?'原句':'整句'}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--tealx)" id="sdr-done-${i}"></span>
+      </div>
+      <div style="font-size:11px;color:var(--ink4);line-height:1.7;margin-bottom:4px;padding:5px 7px;background:rgba(0,0,0,0.15);border-radius:2px;border-left:2px solid var(--line2)">
+        ${escH(s.targetText||'')}
+      </div>
+      ${isMissing
+        ? `<div style="font-size:10px;color:var(--ink5);letter-spacing:1px;padding:3px 7px">AI 略過此句，保留原文</div>`
+        : `${s.reason ? `<div style="font-size:10px;color:var(--amber);letter-spacing:0.5px;padding:3px 7px 5px;opacity:0.9">✦ ${escH(s.reason)}</div>` : ''}
+           <div style="display:flex;flex-direction:column;gap:3px">
+             ${normalizeSuggestions(s.suggestions||[]).map((sg,j)=>`
+               <div class="popsug sent-choice" style="cursor:pointer;align-items:flex-start" data-si="${i}" data-sj="${j}">
+                 <span class="popsug-n" style="margin-top:2px">${escH(sg.label || `方案${j+1}`)}</span>
+                 <span class="popsug-t" style="font-size:12px;line-height:1.7;white-space:normal">${escH(sg.text)}</span>
+               </div>`).join('')}
+           </div>`
+      }
+    </div>`;
+  }).join('');
+
+  listEl.onclick = function(e){
+    const btn = e.target.closest('.sent-choice');
+    if (!btn) return;
+    const i = parseInt(btn.dataset.si);
+    const j = parseInt(btn.dataset.sj);
+    const s = (listEl._sentences||[])[i];
+    if (!s) return;
+    const newTxt = normalizeSuggestions(s.suggestions||[])[j];
+    if (newTxt) acceptSentRight(i, newTxt);
+  };
+}
+
+function acceptSentRight(i, newTxt){
+  const sent=window._sentData?.[i];
+  if(!sent) return;
+  newTxt = suggestionText(newTxt);
+  if(!newTxt) return;
+  // Update textarea
+  const ta=document.getElementById('pr-ta');
+  if(ta) ta.value=ta.value.split(sent.targetText).join(newTxt);
+  // Update inline annotation span
+  document.querySelectorAll(`.sent-ann[data-si="${i}"]`).forEach(el=>{
+    el.textContent=newTxt;
+    el.classList.add('done');
+  });
+  // Mark right card done
+  const doneEl=document.getElementById('sdr-done-'+i);
+  if(doneEl){doneEl.textContent='✓ 已採用';doneEl.style.color='var(--tealx)';}
+  const rcard=document.getElementById('sdr-'+i);
+  if(rcard){rcard.style.opacity='0.5';rcard.style.pointerEvents='none';}
+  sent.targetText=newTxt;
+  // Flash the span
+  const span=document.querySelector(`.sent-ann[data-si="${i}"]`);
+  if(span){span.classList.add('lit');setTimeout(()=>span.classList.remove('lit'),1500);}
+  notify('✦ 已套用整句修改');
+}
+
+function markSdrDone(i){const r=document.getElementById('sdr-'+i);if(r)r.classList.add('done');}
+function renderSentCards(sentences){renderSentMarked(sentences, document.getElementById('pr-ta').value);}
+function acceptSent(i,newTxt){ acceptSentRight(i,newTxt); }
+function prBack(){
+  document.getElementById('pr-ann-wrap').style.display='none';
+  document.getElementById('pr-input-area').style.display='flex';
+  prIssues=[];
+  // Reset right panel
+  document.getElementById('pr-list').innerHTML='<div class="empty"><div class="eseal">批</div><p>設定後<br>點擊「開始批校」</p></div>';
+  document.getElementById('pr-ct').textContent='待批校';
+  document.getElementById('pr-right-tabs').style.display='none';
+  prCtxSelection='';
+  const disp=document.getElementById('pr-ctx-sel-display');
+  if(disp) disp.style.display='none';
+}
+function prConfirm(){
+  const body=document.getElementById('pr-body');
+  // Get text from contenteditable - strips HTML tags but preserves line breaks
+  const html=body.innerHTML
+    .replace(/<br\s*\/?>/gi,'\n')
+    .replace(/<\/div>/gi,'\n')
+    .replace(/<[^>]+>/g,'');
+  const decoded=html.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  document.getElementById('pr-ta').value=decoded.trim();
+  prBack(); notify('✦ 已送回輸入欄');
+}
+function prClear(){document.getElementById('pr-ta').value='';prBack();}
+
+// ══════════════════════════════════════════
+// SUBTABS
+// ══════════════════════════════════════════
+function setRepTab(t){
+  document.querySelectorAll('#page-rep .stab').forEach(s=>s.classList.toggle('on',s.dataset.st===t));
+  document.getElementById('rep-sr').style.display=t==='sr'?'flex':'none';
+  document.getElementById('rep-fr').style.display=t==='fr'?'flex':'none';
+}
+function setWSTab(t){
+  document.querySelectorAll('#page-workshop .stab').forEach(s=>s.classList.toggle('on',s.dataset.st===t));
+  document.getElementById('ws-dl').style.display=t==='dl'?'flex':'none';
+  document.getElementById('ws-pt').style.display=t==='pt'?'flex':'none';
+}
+
+// ══════════════════════════════════════════
+// PAGE: 逐句重複
+// ══════════════════════════════════════════
+const SR_SYS=`你是文字校對員。以下文段已標上行號 [第N句]，找出每句內部的重複詞。
+定義：同一句內，同一個詞或字（1字以上）出現2次或以上，才算重複。包括單字如「她」「他」「的」等。
+嚴格規定：
+· 只看單句內部，絕對不跨句比較
+· 一個詞或字必須在同一句內出現至少2次才標記
+· 若某詞在這句只出現1次，不管其他句有沒有，都不標記
+· 若重複是刻意修辭、口語節奏或強調，且不影響閱讀，可不標記
+· suggestion 只針對第二次出現後的替換，不要重寫整句
+· 若沒有自然替換詞，可留空字串
+忽略詞（不標記這些）：{IGNORE}
+輸出純 JSON（無其他文字）：{"results":[{"sentence":N,"words":[{"word":"重複詞或字","suggestion":"根據該句語意，第二次出現時可換成的詞（1-4字，若無合適替換則留空字串）"}]}]}
+只輸出有重複詞的句子。若全無，輸出{"results":[]}`;
+
+async function runSR(){
+  const txt=document.getElementById('sr-ta').value.trim();
+  if(!txt){notify('請先輸入文字');return;}
+  const sentences=txt.split('\n').filter(s=>s.trim());
+  if(!sentences.length){notify('請以換行分句');return;}
+  const ignore=ignoreWords.sr.join('、')||'無';
+  const numbered=sentences.map((s,i)=>`[第${i+1}句] ${s}`).join('\n');
+  try{
+    const sys=SR_SYS.replace('{IGNORE}',ignore);
+    const raw=await callAI(sys,numbered,'逐句分析中……');
+    let p;try{p=JSON.parse(raw);}catch(e){throw new Error('JSON解析失敗');}
+    // Normalise: support both old string[] and new {word,suggestion}[] format
+    const normalised = (p.results||[]).map(r => {
+      const wordObjs = (r.words||[]).map(w => typeof w==='string' ? {word:w,suggestion:''} : w);
+      return {...r, wordObjs};
+    });
+    // JS-level verification: only keep words that genuinely appear 2+ times in that sentence
+    // AND are not in the ignore list
+    const ignoreSet = new Set(ignoreWords.sr);
+    const verified = normalised.map(r => {
+      const sent = sentences[r.sentence-1]||'';
+      const validObjs = (r.wordObjs||[]).filter(wo => {
+        const w = wo.word||'';
+        if(!w) return false;
+        if(ignoreSet.has(w)) return false;
+        // Count non-overlapping occurrences in the sentence
+        let count = 0, pos = 0;
+        while((pos = sent.indexOf(w, pos)) !== -1){ count++; pos += w.length; }
+        return count >= 2;
+      });
+      return {...r, wordObjs: validObjs};
+    }).filter(r => r.wordObjs.length > 0);
+    renderSR(sentences, verified);
+  }catch(err){notify('分析失敗：'+(err.message||err));}
+}
+
+function renderSR(sentences, results){
+  // results: [{sentence:N, wordObjs:[{word, suggestion}]}]
+  const repMap={};   // index → [{word, suggestion}]
+  for(const r of results) repMap[r.sentence-1] = r.wordObjs||[];
+
+  document.getElementById('sr-input-area').style.display='none';
+  document.getElementById('sr-result').style.display='flex';
+  const total = Object.values(repMap).reduce((s,ws)=>s+ws.length, 0);
+  document.getElementById('sr-ct').textContent=`共 ${sentences.length} 句，${total} 個重複詞`;
+  document.getElementById('sr-rct').textContent=`${total} 個`;
+
+  const div=document.getElementById('sr-sentences'); div.innerHTML='';
+  sentences.forEach((sent,i)=>{
+    const wordObjs = repMap[i]||[];
+    const words = wordObjs.map(wo=>wo.word);
+
+    // Build highlighted HTML
+    let segs=[{t:sent,h:false,word:''}];
+    for(const wo of wordObjs){
+      const w=wo.word;
+      const next=[];
+      for(const seg of segs){
+        if(seg.h){next.push(seg);continue;}
+        const parts=seg.t.split(w);
+        for(let j=0;j<parts.length;j++){
+          if(parts[j]) next.push({t:parts[j],h:false,word:''});
+          if(j<parts.length-1) next.push({t:w,h:true,word:w});
+        }
+      }
+      segs=next;
+    }
+    const html=segs.map(s=>{
+      if(!s.h) return escH(s.t);
+      const wo = wordObjs.find(x=>x.word===s.word)||{};
+      const sug = wo.suggestion||'';
+      return `<span class="sr-rep" data-word="${escH(s.word)}" data-sug="${escH(sug)}" title="${sug?'建議替換：'+sug:'點擊查看建議'}" style="cursor:pointer">${escH(s.t)}</span>`;
+    }).join('');
+
+    const el=document.createElement('div');
+    el.style.cssText='flex-shrink:0';
+    el.innerHTML=`
+      <div style="font-size:10px;color:var(--ink5);letter-spacing:1px;margin-bottom:3px">
+        第 ${i+1} 句${wordObjs.length?` · <span style="color:var(--redl)">${wordObjs.length} 個重複</span>`:''}
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--line);border-radius:2px;padding:7px 10px;font-size:13px;line-height:2">${html}</div>
+      ${wordObjs.map(wo=>wo.suggestion?`
+        <div class="sr-sug-row" data-word="${escH(wo.word)}" style="display:flex;align-items:center;gap:8px;padding:4px 10px;font-size:11px;color:var(--ink4);border-left:3px solid var(--line2);margin-top:2px;background:var(--bg);cursor:pointer;transition:all 0.15s"
+          onmouseenter="this.style.borderColor='var(--tealx)';this.style.color='var(--ink2)'"
+          onmouseleave="this.style.borderColor='var(--line2)';this.style.color='var(--ink4)'"
+          onclick="srApplySug(this,${i},'${escA(wo.word)}','${escA(wo.suggestion)}')">
+          <span style="color:var(--redl);text-decoration:line-through">${escH(wo.word)}</span>
+          <span style="color:var(--ink5)">→</span>
+          <span style="color:var(--tealx)">${escH(wo.suggestion)}</span>
+          <span style="margin-left:auto;font-size:10px;color:var(--ink5)">點擊替換第二個</span>
+        </div>`:''
+      ).join('')}`;
+    div.appendChild(el);
+  });
+
+  window._srSentences=sentences;
+  window._srRepMap=repMap;
+  const allWords=[...new Set(Object.values(repMap).flatMap(ws=>ws.map(wo=>wo.word)))];
+  document.getElementById('sr-rlist').innerHTML=allWords.length
+    ? allWords.map(w=>{
+        const matchSents=sentences.reduce((acc,s,i)=>{if((s.split(w).length-1)>=2)acc.push(i);return acc;},[]);
+        return `<div class="wordcard" id="srw-${escA(w)}" onclick="srJumpWord('${escA(w)}')">
+          <div class="wct">${escH(w)}</div>
+          <div class="winfo">
+            <div class="wtxt">${escH(w)}</div>
+            <div class="wcnt" id="srwcnt-${escA(w)}">出現在 ${matchSents.length} 句・點擊跳轉</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="empty"><p>✦ 無重複詞</p></div>';
+}
+
+function srApplySug(el, sentIdx, word, sug){
+  if(!sug) return;
+  const sentences = window._srSentences||[];
+  const sent = sentences[sentIdx]||'';
+  // Replace only the SECOND occurrence
+  let firstIdx = sent.indexOf(word);
+  if(firstIdx===-1) return;
+  let secondIdx = sent.indexOf(word, firstIdx+word.length);
+  if(secondIdx===-1) return;
+  const newSent = sent.slice(0,secondIdx)+sug+sent.slice(secondIdx+word.length);
+  sentences[sentIdx]=newSent;
+  window._srSentences=sentences;
+  // Update textarea
+  const ta=document.getElementById('sr-ta');
+  if(ta) ta.value=sentences.join('\n');
+  // Visual feedback
+  el.innerHTML=`<span style="color:var(--tealx)">✓ 已替換「${escH(word)}」→「${escH(sug)}」</span>`;
+  el.style.pointerEvents='none'; el.style.opacity='0.6';
+  notify('✓ 已替換');
+}
+const _srJumpMap={};
+function srJumpWord(word){
+  // Find all sr-rep spans matching this word in the sentences panel
+  const sentDiv=document.getElementById('sr-sentences');
+  const allSpans=[...sentDiv.querySelectorAll('.sr-rep')].filter(s=>s.textContent===word);
+  if(!allSpans.length) return;
+  // Deactivate previous highlight
+  sentDiv.querySelectorAll('.sr-rep').forEach(s=>s.style.outline='none');
+  document.querySelectorAll('.wordcard').forEach(c=>c.classList.remove('active'));
+  const wc=document.getElementById('srw-'+word);
+  if(wc) wc.classList.add('active');
+  const idx=((_srJumpMap[word]||0));
+  const target=allSpans[idx%allSpans.length];
+  if(target){
+    target.style.outline='2px solid var(--amberl)';
+    target.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  _srJumpMap[word]=(idx+1)%allSpans.length;
+  const cntEl=document.getElementById('srwcnt-'+word);
+  if(cntEl) cntEl.textContent=`出現 ${allSpans.length} 次 · 第 ${idx+1} 個`;
+}
+function srBack(){
+  document.getElementById('sr-input-area').style.display='flex';
+  document.getElementById('sr-result').style.display='none';
+}
+function srClear(){document.getElementById('sr-ta').value='';srBack();}
+
+// ══════════════════════════════════════════
+// PAGE: 全文重複
+// ══════════════════════════════════════════
+let frWords={hi:[],md:[],lo:[]};
+async function runFR(){
+  const txt=document.getElementById('fr-ta').value.trim();
+  if(!txt){notify('請先輸入文字');return;}
+  const ignore=new Set(ignoreWords.fr);
+  const wordCount=new Map();
+
+  // ── Single characters (1 char) ──
+  for(let i=0;i<txt.length;i++){
+    const w=txt[i];
+    if(/[\u4e00-\u9fff]/.test(w)&&!ignore.has(w))
+      wordCount.set(w,(wordCount.get(w)||0)+1);
+  }
+
+  // ── Multi-char words (2–6 chars) ──
+  for(let len=2;len<=6;len++){
+    for(let i=0;i<=txt.length-len;i++){
+      const w=txt.slice(i,i+len);
+      if(/^[\u4e00-\u9fff]+$/.test(w)&&!ignore.has(w))
+        wordCount.set(w,(wordCount.get(w)||0)+1);
+    }
+  }
+
+  // Keep words that appear >= 2 times
+  const candidates=[...wordCount.entries()]
+    .filter(([,c])=>c>=2)
+    .sort((a,b)=>b[1]-a[1]);
+
+  // Dedup: for multi-char words, if a shorter word is fully contained in a longer word
+  // that appears the SAME number of times, hide the shorter one (it's just part of the longer)
+  // But keep single chars always — they can coexist with multi-char words
+  const filtered = candidates.filter(([w,c])=>{
+    if(w.length===1) return true; // always keep single chars
+    // Remove if a longer word contains this word AND appears nearly as often (within 1)
+    return !candidates.some(([w2,c2])=>w2!==w && w2.length>w.length && w2.includes(w) && c2>=c-1);
+  });
+
+  frWords={hi:[],md:[],lo:[]};
+  filtered.forEach(([w,c])=>{
+    if(c>=8)frWords.hi.push({w,c});
+    else if(c>=4)frWords.md.push({w,c});
+    else frWords.lo.push({w,c}); // 2-3 times = low
+  });
+  const total=filtered.length;
+  document.getElementById('fr-input-area').style.display='none';
+  document.getElementById('fr-result').style.display='flex';
+  document.getElementById('fr-ct').textContent=`共 ${total} 個重複詞`;
+  document.getElementById('fr-rct').textContent=`${total} 個`;
+  document.getElementById('fr-empty').style.display='none';
+  document.getElementById('fr-cats').style.display='flex';
+  showFRCat('hi');
+  document.getElementById('fr-body').innerHTML=escH(txt).replace(/\n/g,'<br>');
+}
+function showFRCat(cat){
+  ['hi','md','lo'].forEach(c=>{
+    const btn=document.getElementById('fr-cat-'+c);
+    btn.classList.toggle('on',c===cat);
+  });
+  const list=frWords[cat]||[];
+  document.getElementById('fr-rlist').innerHTML=list.length
+    ?list.map(({w,c})=>`<div class="wordcard" id="fw-${escA(w)}" onclick="frSmartClick('${escA(w)}')">
+        <div class="wct">${escH(w)}</div>
+        <div class="winfo">
+          <div class="wtxt">${escH(w)}</div>
+          <div class="wcnt" id="fwcnt-${escA(w)}">出現 ${c} 次・點擊跳轉</div>
+        </div>
+        <span class="wbadge ${cat==='hi'?'hi':cat==='md'?'md':'lo'}">${cat==='hi'?'高頻':cat==='md'?'中頻':'低頻'}</span>
+      </div>`).join('')
+    :'<div class="empty" style="flex:none;padding:16px"><p>此頻段無詞</p></div>';
+}
+// Track which occurrence index we're currently at per word
+const _frJumpIdx={};
+function frHighlight(word){
+  document.querySelectorAll('.wordcard').forEach(c=>c.classList.remove('active'));
+  const wc=document.getElementById('fw-'+word);
+  if(wc)wc.classList.add('active');
+  const txt=document.getElementById('fr-ta').value;
+  const parts=txt.split(word);
+  let html='';
+  for(let i=0;i<parts.length;i++){
+    if(parts[i])html+=escH(parts[i]);
+    if(i<parts.length-1)html+=`<span class="rep-hi" id="frh-${escA(word)}-${i}">${escH(word)}</span>`;
+  }
+  document.getElementById('fr-body').innerHTML=html.replace(/\n/g,'<br>');
+  // Reset jump index and jump to first occurrence
+  _frJumpIdx[word]=0;
+  frJumpToOccurrence(word);
+}
+function frJumpToOccurrence(word){
+  const bodyEl=document.getElementById('fr-body');
+  const spans=[...bodyEl.querySelectorAll('.rep-hi')];
+  if(!spans.length) return;
+  // Remove prev highlight
+  spans.forEach(s=>s.style.outline='none');
+  const idx=_frJumpIdx[word]||0;
+  const target=spans[idx%spans.length];
+  if(target){
+    target.style.outline='2px solid var(--amberl)';
+    target.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+function frClickJump(word){
+  // Called on each subsequent click of the wordcard - cycle to next
+  if(!(_frJumpIdx[word]>=0)){frHighlight(word);return;}
+  const bodyEl=document.getElementById('fr-body');
+  const spans=[...bodyEl.querySelectorAll('.rep-hi')];
+  if(!spans.length){frHighlight(word);return;}
+  _frJumpIdx[word]=(_frJumpIdx[word]+1)%spans.length;
+  // Update wordcard counter
+  const wc=document.getElementById('fw-'+word);
+  if(wc){
+    const cnt=wc.querySelector('.wcnt');
+    if(cnt) cnt.textContent=`出現 ${spans.length} 次 · 第 ${_frJumpIdx[word]+1} 個`;
+  }
+  frJumpToOccurrence(word);
+}
+function frSmartClick(word){
+  const already=document.getElementById('fr-body').querySelector('.rep-hi');
+  const activeWc=document.getElementById('fw-'+word);
+  // If this word is already highlighted (active card), cycle to next occurrence
+  if(already && activeWc && activeWc.classList.contains('active')){
+    frClickJump(word);
+  } else {
+    // First click: highlight all occurrences and jump to first
+    frHighlight(word);
+  }
+  // Update counter display
+  const bodyEl=document.getElementById('fr-body');
+  const spans=[...bodyEl.querySelectorAll('.rep-hi')];
+  const idx=_frJumpIdx[word]||0;
+  const cntEl=document.getElementById('fwcnt-'+word);
+  if(cntEl&&spans.length) cntEl.textContent=`出現 ${spans.length} 次 · 第 ${idx+1} 個`;
+}
+function frBack(){
+  document.getElementById('fr-input-area').style.display='flex';
+  document.getElementById('fr-result').style.display='none';
+  document.getElementById('fr-empty').style.display='flex';
+  document.getElementById('fr-cats').style.display='none';
+}
+function frClear(){document.getElementById('fr-ta').value='';frBack();}
+
+// ══════════════════════════════════════════
+// PAGE: 對白修正
+// ══════════════════════════════════════════
+let dlMode='auto', dlIssues=[], dlCharCount=0;
+function setDLMode(m){
+  dlMode=m;
+  document.querySelectorAll('#dl-mode-chips .chip').forEach(c=>c.classList.toggle('on',c.dataset.mode===m));
+  document.getElementById('dl-manual-dir').style.display=m==='manual'?'flex':'none';
+}
+function addDLChar(preset={}){
+  dlCharCount++;
+  const id='dlc'+dlCharCount;
+  const div=document.createElement('div');
+  div.className='chcard'; div.id=id;
+  if(preset.name) div.dataset.cid=preset.name;
+  div.innerHTML=`<div class="chhd"><span class="chlbl">角色</span><button class="chdel" onclick="clearCharCard('${id}','dl')">✕</button></div>
+    <div class="chgrid">
+      <div><label>姓名</label><input class="inp" placeholder="姓名" value="${escA(preset.name||'')}"></div>
+      <div><label>性別</label><input class="inp" placeholder="男／女" value="${escA(preset.gender||'')}"></div>
+      <div><label>性格</label><input class="inp" placeholder="性格" value="${escA(preset.personality||'')}"></div>
+      <div><label>身份</label><input class="inp" placeholder="身份" value="${escA(preset.role||'')}"></div>
+      <div style="grid-column:span 2"><label>說話方式</label><input class="inp" style="width:100%" placeholder="文雅古典……" value="${escA(preset.speech||'')}"></div>
+    </div>`;
+  document.getElementById('dl-chars').appendChild(div);
+}
+function getDLCharStr(){
+  return [...document.querySelectorAll('#dl-chars .chcard')].map(card=>{
+    const inp=card.querySelectorAll('input');
+    return `${inp[0]?.value}（${inp[1]?.value}，${inp[2]?.value}，${inp[3]?.value}，說話方式：${inp[4]?.value}）`;
+  }).filter(s=>!/^（/.test(s)).join('；')||'未設定';
+}
+const DL_AUTO_SYS=`你是專業小說對白編輯。角色設定：{C}
+請找出對白中不符合角色設定、語氣失真、不自然、過於直白或情緒力度失衡之處。
+
+判斷優先順序：
+1. 角色一致性
+2. 說話自然度
+3. 場景情緒與對白功能
+4. 文學修飾
+
+規則：
+1. 不要把所有角色都修成同一種成熟文學口吻。
+2. 不可加入角色設定中沒有的新背景。
+3. 若原句雖樸素但符合角色，就不要硬改。
+4. suggestions 必須真的像該角色會說出口的話。
+
+輸出純 JSON（無其他文字）：
+{"issues":[{"id":"d1","type":"amber","typeLabel":"語氣|角色|節奏","speaker":"角色名","targetText":"有問題的對白原文（至少8字）","problem":"問題說明（20字內）","suggestions":[{"label":"保守版","text":"修改版本1"},{"label":"流暢版","text":"修改版本2"},{"label":"AI最佳版","text":"修改版本3"}]}]}
+type: red=嚴重不符, amber=輕微問題, teal=可優化`;
+const DL_MANUAL_SYS=`你是專業小說對白編輯。角色設定：{C}
+修改方向：{DIR}
+
+請依照指定方向調整對白，但仍須遵守以下原則：
+1. 優先保持角色口吻一致。
+2. 不可新增原文沒有的設定與資訊。
+3. 不可把所有句子改得過度書面或過度華麗。
+4. 若指定方向與角色設定衝突，優先保留角色一致性。
+
+輸出純 JSON（無其他文字）：
+{"issues":[{"id":"d1","type":"amber","typeLabel":"修改","speaker":"角色名","targetText":"原對白（至少8字）","problem":"修改原因","suggestions":[{"label":"貼合要求版","text":"修改版本1"},{"label":"自然順口版","text":"修改版本2"},{"label":"AI最佳版","text":"修改版本3"}]}]}`;
+
+async function runDL(){
+  const txt=document.getElementById('dl-ta').value.trim();
+  if(!txt){notify('請先輸入文字');return;}
+  const charStr=getDLCharStr();
+  try{
+    let sys;
+    if(dlMode==='manual'){
+      const dir=document.getElementById('dl-dir-ta').value.trim()||'一般優化';
+      sys=DL_MANUAL_SYS.replace('{C}',charStr).replace('{DIR}',dir);
+    } else {
+      sys=DL_AUTO_SYS.replace('{C}',charStr);
+    }
+    const raw=await callAI(sys,txt,'分析對白中……');
+    let p;try{p=JSON.parse(raw);}catch(e){throw new Error('JSON解析失敗');}
+    dlIssues=(p.issues||[]).map((iss,i)=>({...iss,id:iss.id||'d'+i}));
+    document.getElementById('dl-input-area').style.display='none';
+    document.getElementById('dl-ann-wrap').style.display='flex';
+    const cnts={red:0,amber:0,teal:0};
+    dlIssues.forEach(i=>{if(cnts[i.type]!==undefined)cnts[i.type]++;});
+    document.getElementById('dl-stats').innerHTML=stHTML(cnts.red,cnts.amber,cnts.teal,0);
+    document.getElementById('dl-ct').textContent=`共 ${dlIssues.length} 個問題`;
+    renderAnnotated('dl',txt,dlIssues,'dl-body','dl-list');
+  }catch(err){notify('分析失敗：'+(err.message||err));}
+}
+function dlBack(){
+  document.getElementById('dl-ann-wrap').style.display='none';
+  document.getElementById('dl-input-area').style.display='flex';
+  dlIssues=[];
+}
+function dlConfirm(){
+  const tmp=document.createElement('div');
+  tmp.innerHTML=document.getElementById('dl-body').innerHTML.replace(/<br\s*\/?>/gi,'\n');
+  document.getElementById('dl-ta').value=(tmp.textContent||tmp.innerText||'').trim();
+  dlBack(); notify('✦ 已送回輸入欄');
+}
+
+// ══════════════════════════════════════════
+// PAGE: 劇情改寫
+// ══════════════════════════════════════════
+let ptMode='ai', ptDirs=[], ptCharCount=0;
+function setPTMode(m){
+  ptMode=m;
+  document.querySelectorAll('#pt-mode-chips .chip').forEach(c=>c.classList.toggle('on',c.dataset.mode===m));
+  document.getElementById('pt-ai-opts').style.display=m==='ai'?'flex':'none';
+  document.getElementById('pt-manual-dir').style.display=m==='manual'?'flex':'none';
+}
+function addPTChar(preset={}){
+  ptCharCount++;
+  const id='ptc'+ptCharCount;
+  const div=document.createElement('div');
+  div.className='chcard'; div.id=id;
+  if(preset.name) div.dataset.cid=preset.name;
+  div.innerHTML=`<div class="chhd"><span class="chlbl">角色</span><button class="chdel" onclick="clearCharCard('${id}','pt')">✕</button></div>
+    <div class="chgrid">
+      <div><label>姓名</label><input class="inp" value="${escA(preset.name||'')}"></div>
+      <div><label>性格</label><input class="inp" value="${escA(preset.personality||'')}"></div>
+      <div style="grid-column:span 2"><label>身份與背景</label><input class="inp" style="width:100%" value="${escA((preset.role||'')+(preset.bg?' · '+preset.bg:''))}"></div>
+    </div>`;
+  document.getElementById('pt-chars').appendChild(div);
+}
+function clearCharCard(cardId, ns){
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const cid = card.dataset.cid;
+  if (cid) {
+    // Un-highlight badge if it came from book chars
+    const idx = (window._bookChars||[]).findIndex(c=>c.name===cid);
+    if (idx>=0) {
+      const badge = document.getElementById(ns+'-cbadge-'+idx);
+      if (badge) badge.classList.remove('on');
+    }
+  }
+  card.remove();
+}
+function getPTCharStr(){
+  return [...document.querySelectorAll('#pt-chars .chcard')].map(card=>{
+    const inp=card.querySelectorAll('input');
+    return `${inp[0]?.value}（${inp[1]?.value}，${inp[2]?.value}）`;
+  }).filter(s=>!/^（/.test(s)).join('；')||'無';
+}
+// length-aware preamble
+function getLenPreamble(){
+  const book=getCurBook();
+  if(!book) return '';
+  const map={short:'這是短篇小說，改寫時保持緊湊，不需過多鋪墊。',mid:'這是中篇小說，改寫時注重人物弧度與情節連貫。',long:'這是長篇小說，改寫時可適當增加細節與情感鋪墊，注重世界觀一致性。'};
+  return map[book.len]||'';
+}
+const PT_DIRS_SYS=`你是創意小說編輯，擅長{G}文風。{LEN}角色：{C}
+請為以下段落提出 4 個彼此明確不同的改寫方向（偏好：{DIR}）。
+
+方向設計原則：
+1. 每個方向必須有明確策略差異，不可只是同義重述。
+2. 不可偏離原段落的核心事件、角色關係與情緒方向。
+3. 至少包含一個「AI最佳方向」：不拘泥於原寫法，而是從整體文風與閱讀效果判斷最值得採用的改法。
+
+輸出純 JSON（無其他文字）：
+{"directions":[{"title":"方向標題（6字內）","summary":"方向概述（50字內）","keyChanges":["關鍵改動1","關鍵改動2"],"tags":["標籤"],"mood":"情感基調","is_best":true|false}]}`;
+const PT_WRITE_SYS=`你是創意小說作家，擅長{G}文風。{LEN}角色：{C}
+請按指定方向改寫以下段落。
+
+改寫原則：
+1. 保留原文核心意思、角色關係、場景功能與情緒方向。
+2. 保留大概篇幅，不可任意擴寫太多。
+3. 不可新增原文沒有的世界觀資訊、設定名詞或重大心理活動。
+4. 若指定方向是 AI最佳方向，可以不拘泥於原句形式，但仍必須讓這段像出自同一篇作品。
+
+只輸出改寫後的正文，不要加任何說明或標題。`;
+const PT_MANUAL_SYS=`你是創意小說作家，擅長{G}文風。{LEN}角色：{C}
+改寫要求：{DIR}
+
+請按要求改寫以下段落，並遵守：
+1. 保留原文核心意思與情節功能。
+2. 不可新增原文沒有的重要資訊。
+3. 不可只做表面換詞，必須真的改善文字效果。
+4. 若要求過於籠統，請自行選擇最能提升閱讀效果的寫法，但不要脫離原段。
+
+只輸出改寫後的正文，不要加任何說明。`;
+
+async function runPT(){
+  const txt=document.getElementById('pt-ta').value.trim();
+  if(!txt){notify('請先輸入文字');return;}
+  const g=document.getElementById('pt-genre').value;
+  const chars=getPTCharStr(), len=getLenPreamble();
+  document.getElementById('pt-input-area').style.display='none';
+  document.getElementById('pt-result').style.display='flex';
+  document.getElementById('pt-content').innerHTML='';
+  document.getElementById('pt-use-btn').style.display='none';
+  document.getElementById('pt-dirs').innerHTML='<div class="empty"><p>生成中……</p></div>';
+  try{
+    if(ptMode==='manual'){
+      const dir=document.getElementById('pt-dir-ta').value.trim()||'一般改寫';
+      const ctx=document.getElementById('pt-ctx').value.trim();
+      const sys=PT_MANUAL_SYS.replace('{G}',g).replace('{LEN}',len).replace('{C}',chars).replace('{DIR}',dir);
+      const u=(ctx?'【上文】\n'+ctx+'\n\n':'')+'【要改寫的段落】\n'+txt;
+      const rw=await callAI(sys,u,'改寫中……',2000);
+      document.getElementById('pt-content').innerHTML=`<div class="slbl">改寫稿</div><div class="rwbox" id="pt-rwtxt">${escH(rw).replace(/\n/g,'<br>')}</div>`;
+      document.getElementById('pt-dirs').innerHTML='<div class="empty"><p>✦ 手動模式<br>已直接生成</p></div>';
+      document.getElementById('pt-use-btn').style.display='';
+      document.getElementById('pt-ct').textContent='已生成';
+    } else {
+      const dir=document.getElementById('pt-dir').value;
+      const ctx=document.getElementById('pt-ctx').value.trim();
+      const sys=PT_DIRS_SYS.replace('{G}',g).replace('{LEN}',len).replace('{C}',chars).replace('{DIR}',dir);
+      const u=(ctx?'【上文】\n'+ctx+'\n\n':'')+'【要改寫的段落】\n'+txt;
+      const raw=await callAI(sys,u,'生成改寫方向中……');
+      let p;try{p=JSON.parse(raw);}catch(e){throw new Error('JSON解析失敗');}
+      ptDirs=p.directions||[];
+      document.getElementById('pt-ct').textContent=`共 ${ptDirs.length} 個方向`;
+      renderPTDirs();
+    }
+  }catch(err){console.error(err);notify('生成失敗：'+(err.message||err));ptBack();}
+}
+function renderPTDirs(){
+  document.getElementById('pt-dirs').innerHTML=ptDirs.length
+    ?ptDirs.map((d,i)=>`<div class="dircard" id="dc-${i}" onclick="selPTDir(${i})">
+        <div class="dirn">方向 ${i+1}</div>
+        <div class="dirtitle">${escH(d.title||'')}</div>
+        <div class="dirbody">${escH(d.summary||'')}</div>
+        <ul style="margin:4px 0 0 14px;font-size:11px;color:var(--ink4);line-height:1.7">${(d.keyChanges||[]).map(c=>`<li>${escH(c)}</li>`).join('')}</ul>
+        <div class="dirtags">${(d.tags||[]).map(t=>`<span class="dtag">${escH(t)}</span>`).join('')}${d.is_best?`<span class="dtag" style="border-color:rgba(26,107,90,0.45);color:var(--tealx)">AI最佳</span>`:''}${d.mood?`<span class="dtag" style="border-color:rgba(192,57,43,0.4);color:var(--redl)">${escH(d.mood)}</span>`:''}</div>
+      </div>`).join('')
+    :'<div class="empty"><p>無方向</p></div>';
+}
+async function selPTDir(i){
+  document.querySelectorAll('.dircard').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('dc-'+i)?.classList.add('sel');
+  document.getElementById('pt-use-btn').style.display='none';
+  const d=ptDirs[i], txt=document.getElementById('pt-ta').value.trim();
+  const ctx=document.getElementById('pt-ctx').value.trim();
+  const g=document.getElementById('pt-genre').value;
+  const chars=getPTCharStr(), len=getLenPreamble();
+  const sys=PT_WRITE_SYS.replace('{G}',g).replace('{LEN}',len).replace('{C}',chars);
+  const u=`改寫方向：${d.title} — ${d.summary}\n\n${ctx?'【上文】\n'+ctx+'\n\n':''}【原段落】\n${txt}`;
+  document.getElementById('pt-content').innerHTML=`<div class="slbl">改寫稿 · ${escH(d.title)}</div><p style="font-size:12px;color:var(--ink5)">生成中……</p>`;
+  try{
+    const rw=await callAI(sys,u,'生成改寫稿中……',2000);
+    document.getElementById('pt-content').innerHTML=`<div class="slbl">改寫稿 · ${escH(d.title)}</div><div class="rwbox" id="pt-rwtxt">${escH(rw).replace(/\n/g,'<br>')}</div>`;
+    document.getElementById('pt-use-btn').style.display='';
+  }catch(e){document.getElementById('pt-content').innerHTML='<p style="color:var(--redl);font-size:12px">生成失敗，請重試</p>';}
+}
+function ptBack(){
+  document.getElementById('pt-result').style.display='none';
+  document.getElementById('pt-input-area').style.display='flex';
+  document.getElementById('pt-ct').textContent='待生成';
+  ptDirs=[];
+}
+function ptUse(){
+  const el=document.getElementById('pt-rwtxt');
+  if(!el)return;
+  const tmp=document.createElement('div');
+  tmp.innerHTML=el.innerHTML.replace(/<br\s*\/?>/gi,'\n');
+  ptBack();
+  document.getElementById('pt-ta').value=(tmp.textContent||tmp.innerText||'').trim();
+  notify('✦ 改寫稿已送回輸入欄');
+}
+
+// ══════════════════════════════════════════
+// PAGE: 章節分析
+// ══════════════════════════════════════════
+let anaFocus='all';
+function setAnaFocus(f){
+  anaFocus=f;
+  document.querySelectorAll('#ana-focus-chips .chip').forEach(c=>c.classList.toggle('on',c.dataset.f===f));
+}
+const ANA_SYS=`你是資深小說編輯，擅長{G}文風。請分析以下章節，從讀者角度評估。
+分析重點：{F}
+
+分析原則：
+1. 區分客觀問題與主觀風格差異。
+2. 不要把單純「不是你偏好的風格」當成缺點。
+3. 若指出問題，必須說明它如何影響讀者理解、代入、節奏或角色感受。
+4. fix 必須可執行，不可空泛。
+5. 若能提供 example，應直接給出可替換的寫法，而不是只講理論。
+
+輸出純 JSON（無其他文字）：
+{"summary":"章節主要內容（100字內）","mood":"整體情感基調","pacing":"節奏評估（快/中/慢）","readability_score":85,"issues":[{"type":"warn|note","category":"用詞|節奏|人物|邏輯|情感","title":"問題標題","detail":"詳細說明（50字內）","location":"大約位置（可選）","fix":"建議的修改方向（50字內）","example":"直接替代方案原文片段→修改後（如適用，可選）"}],"strengths":["優點1","優點2"],"suggestions":["整體建議1","整體建議2"]}
+readability_score 為 0-100 分。每個問題都必須附上 fix；若能給出具體替代文字，請填寫 example。`;
+
+const ANA_FOCUS_MAP={all:'全面分析（用詞、節奏、人物、邏輯、情感）',readability:'閱讀性（用詞深淺、句子流暢、是否容易理解）',pacing:'節奏（場景節奏快慢、情節推進速度）',char:'人物（角色描寫、對白自然度、人物弧度）'};
+
+async function runAna(){
+  const txt=document.getElementById('ana-ta').value.trim();
+  if(!txt){notify('請先輸入章節');return;}
+  const g=document.getElementById('ana-genre').value;
+  try{
+    const sys=ANA_SYS.replace('{G}',g).replace('{F}',ANA_FOCUS_MAP[anaFocus]||'全面分析');
+    const raw=await callAI(sys,txt,'分析章節中……');
+    let p;try{p=JSON.parse(raw);}catch(e){throw new Error('JSON解析失敗');}
+    renderAna(p);
+  }catch(err){notify('分析失敗：'+(err.message||err));}
+}
+function renderAna(d){
+  document.getElementById('ana-ct').textContent='分析完成';
+  const scoreColor=d.readability_score>=80?'var(--tealx)':d.readability_score>=60?'var(--amberl)':'var(--redl)';
+  let html=`
+    <div class="ana-section">
+      <div class="ana-hd">📋 章節摘要</div>
+      <div class="ana-bd">
+        <div style="margin-bottom:8px">${escH(d.summary||'')}</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--ink4)">情感基調：<span style="color:var(--amberl)">${escH(d.mood||'')}</span></span>
+          <span style="font-size:11px;color:var(--ink4)">節奏：<span style="color:var(--amberl)">${escH(d.pacing||'')}</span></span>
+          <span style="font-size:11px;color:var(--ink4)">可讀性：<span style="color:${scoreColor};font-size:14px;font-weight:bold">${d.readability_score||'-'}</span><span style="color:var(--ink5)">/100</span></span>
+        </div>
+      </div>
+    </div>`;
+
+  if((d.issues||[]).length){
+    html+=`<div class="ana-section"><div class="ana-hd">⚠ 問題 · 建議 · 替代方案</div><div class="ana-bd" style="display:flex;flex-direction:column;gap:10px">`;
+    (d.issues||[]).forEach(iss=>{
+      const borderCol=iss.type==='warn'?'var(--redl)':'var(--amberl)';
+      html+=`<div style="border-left:2px solid ${borderCol};padding:7px 10px;background:rgba(255,255,255,0.02);border-radius:0 2px 2px 0">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span class="ana-tag ${iss.type==='warn'?'warn':'note'}">${escH(iss.category||'')}</span>
+          <span style="font-size:12px;color:var(--ink2);font-weight:500">${escH(iss.title||'')}</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink4);line-height:1.6;margin-bottom:4px">${escH(iss.detail||'')}</div>
+        ${iss.location?`<div style="font-size:10px;color:var(--ink5);margin-bottom:4px">📍 ${escH(iss.location)}</div>`:''}
+        ${iss.fix?`<div style="font-size:11px;color:var(--tealx);line-height:1.6;padding:4px 7px;background:rgba(26,107,90,0.07);border-radius:2px;margin-bottom:4px">💡 修改方向：${escH(iss.fix)}</div>`:''}
+        ${iss.example?`<div style="font-size:11px;color:var(--ink3);line-height:1.7;padding:5px 8px;background:rgba(200,120,10,0.06);border-left:2px solid var(--amber);border-radius:0 2px 2px 0">✎ ${escH(iss.example)}</div>`:''}
+      </div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  if((d.strengths||[]).length){
+    html+=`<div class="ana-section"><div class="ana-hd">✦ 優點</div><div class="ana-bd">
+      ${(d.strengths||[]).map(s=>`<div style="display:flex;gap:6px;margin-bottom:4px"><span style="color:var(--tealx)">·</span><span>${escH(s)}</span></div>`).join('')}
+    </div></div>`;
+  }
+
+  if((d.suggestions||[]).length){
+    html+=`<div class="ana-section"><div class="ana-hd">💡 整體建議</div><div class="ana-bd">
+      ${(d.suggestions||[]).map((s,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px"><span style="color:var(--amberl);flex-shrink:0">${i+1}.</span><span>${escH(s)}</span></div>`).join('')}
+    </div></div>`;
+  }
+
+  document.getElementById('ana-result').innerHTML=html;
+}
+function anaClear(){document.getElementById('ana-ta').value='';document.getElementById('ana-result').innerHTML='<div class="empty"><div class="eseal">析</div><p>貼入章節<br>AI 幫你分析讀者觀感</p></div>';document.getElementById('ana-ct').textContent='待分析';}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function stHTML(r,a,t,p){
+  let h='';
+  if(r)h+=`<div class="st r"><div class="sd"></div><span>${r}</span><em> 錯字</em></div>`;
+  if(a)h+=`<div class="st a"><div class="sd"></div><span>${a}</span><em> 詞義</em></div>`;
+  if(t)h+=`<div class="st t"><div class="sd"></div><span>${t}</span><em> 重複</em></div>`;
+  if(p)h+=`<div class="st p"><div class="sd"></div><span>${p}</span><em> 標點</em></div>`;
+  return h;
+}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escA(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'\\"');}
+function notify(msg){
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'),2600);
+}
+
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// PAGE: 自由詢問
+// ══════════════════════════════════════════
+let freeTemplates = [];
+try { freeTemplates = JSON.parse(localStorage.getItem('novelai_free_tpls')||'[]'); } catch(e){ freeTemplates=[]; }
+function saveFreeTemplates(){ localStorage.setItem('novelai_free_tpls', JSON.stringify(freeTemplates)); }
+
+const FREE_CHAR_PRESET_IDX = 5;
+let freeCharCount = 3;
+let freeActivePreset = -1;
+
+function setFreeCharCount(n){
+  freeCharCount = n;
+  document.querySelectorAll('#free-char-count-chips .chip').forEach(c=>c.classList.toggle('on', parseInt(c.dataset.n)===n));
+}
+
+const FREE_PRESETS = [
+  { name:'劇情 Bug 檢查', sys:'你是資深小說編輯。請仔細閱讀以下章節，找出所有明顯的劇情漏洞（Bug）：前後矛盾、邏輯跳躍、人物行為不合理、時間地點錯誤等。\n對每個 Bug：\n1. 說明問題所在\n2. 指出原文位置\n3. 給出直接替代的修改方案（附具體改寫文字）\n輸出格式清晰，用中文回覆。' },
+  { name:'節奏分析', sys:'你是小說節奏專家。分析以下段落的敘事節奏，指出哪裡太快、哪裡太慢，並給出調整建議及改寫示例。' },
+  { name:'對白自然度', sys:'你是對白寫作專家。分析以下段落的對白是否自然流暢，找出生硬或不合人物性格之處，並給出改善建議及替代台詞。' },
+  { name:'讀者視角', sys:'請從普通讀者的角度閱讀以下段落，指出哪些地方容易讓讀者感到困惑、不清楚或難以代入，並建議如何改善。' },
+  { name:'情感強化', sys:'你是情感寫作專家。分析以下段落的情感表達，指出哪些地方情感太平淡或表達不足，並給出強化情感的具體改寫建議。' },
+  { name:'角色對白仿寫', sys:'__CHAR__' },
+  { name:'開放詢問', sys:'' },
+];
+
+function initFreePresets(){
+  const chips = document.getElementById('free-preset-chips');
+  if (!chips) return;
+  const all = [...FREE_PRESETS, ...freeTemplates];
+  chips._presets = all;
+  chips.innerHTML = all.map((t,i)=>`
+    <button class="chip" data-pi="${i}" style="display:flex;align-items:center;gap:4px">
+      ${escH(t.name)}
+      ${i >= FREE_PRESETS.length ? `<span style="color:var(--ink5);font-size:10px" onclick="event.stopPropagation();deleteFreeTemplate(${i})">✕</span>` : ''}
+    </button>`).join('');
+  chips.onclick = function(e){
+    const btn = e.target.closest('.chip');
+    if (!btn||e.target.tagName==='SPAN') return;
+    const i = parseInt(btn.dataset.pi);
+    const t = (chips._presets||[])[i];
+    if (!t) return;
+    chips.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===btn));
+    freeActivePreset = i;
+    const isChar = (i === FREE_CHAR_PRESET_IDX);
+    const charSec = document.getElementById('free-char-section');
+    const sysLbl  = document.getElementById('free-content-lbl');
+    const inpLbl  = document.getElementById('free-input-lbl');
+    if (isChar) {
+      charSec.style.display = 'flex';
+      sysLbl.style.display  = 'none';
+      document.getElementById('free-sys-ta').style.display = 'none';
+      inpLbl.querySelector ? null : null;
+      inpLbl.textContent = '參考對白（格式：回應1: 台詞 / 回應2: 台詞 ……）';
+      document.getElementById('free-ta').placeholder = '回應1: 哼，你以為憑你也能傷我？\n回應2: 讓開，別礙事。\n回應3: ……算你有點眼力。';
+    } else {
+      charSec.style.display = 'none';
+      sysLbl.style.display  = '';
+      document.getElementById('free-sys-ta').style.display = '';
+      inpLbl.textContent = '輸入內容';
+      document.getElementById('free-ta').placeholder = '貼入文章、問題、要處理的內容……';
+      document.getElementById('free-sys-ta').value = t.sys||'';
+    }
+  };
+}
+
+function saveFreeTemplate(){
+  const name = document.getElementById('free-tpl-name').value.trim();
+  const sys  = document.getElementById('free-sys-ta').value.trim();
+  if (!name) { notify('請填寫模板名稱'); return; }
+  freeTemplates.push({ name, sys });
+  saveFreeTemplates();
+  document.getElementById('free-tpl-name').value = '';
+  initFreePresets();
+  notify('✦ 模板已儲存：' + name);
+}
+function deleteFreeTemplate(i){
+  const idx = i - FREE_PRESETS.length;
+  if (idx < 0) return;
+  freeTemplates.splice(idx, 1);
+  saveFreeTemplates();
+  initFreePresets();
+}
+
+// Simple Markdown → HTML renderer for free ask results
+function mdToHtml(md){
+  let h = escH(md);
+  // Headers
+  h = h.replace(/^### (.+)$/gm, '<div style="font-size:13px;color:var(--amberl);font-weight:bold;margin:10px 0 4px;letter-spacing:1px">$1</div>');
+  h = h.replace(/^## (.+)$/gm,  '<div style="font-size:14px;color:var(--amberl);font-weight:bold;margin:12px 0 5px;border-bottom:1px solid var(--line);padding-bottom:3px">$1</div>');
+  h = h.replace(/^# (.+)$/gm,   '<div style="font-size:15px;color:var(--amberl);font-weight:bold;margin:14px 0 6px">$1</div>');
+  // Bold
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--ink2)">$1</strong>');
+  // Italic
+  h = h.replace(/\*(.+?)\*/g, '<em style="color:var(--ink3)">$1</em>');
+  // Tables: |col|col| rows
+  h = h.replace(/(\|.+\|\n?)+/g, m => {
+    const rows = m.trim().split('\n').filter(r=>r.trim());
+    let tbl = '<table style="width:100%;border-collapse:collapse;font-size:11px;margin:6px 0">';
+    rows.forEach((row, ri) => {
+      if (/^\|[-| ]+\|$/.test(row.trim())) return;
+      const cells = row.split('|').filter((_,i,a)=>i>0&&i<a.length-1);
+      const tag = ri===0 ? 'th' : 'td';
+      const style = ri===0
+        ? 'padding:4px 7px;background:rgba(200,120,10,0.12);color:var(--amberl);text-align:left;border:1px solid var(--line2)'
+        : 'padding:4px 7px;color:var(--ink3);border:1px solid var(--line);vertical-align:top';
+      tbl += '<tr>' + cells.map(c=>`<${tag} style="${style}">${c.trim()}</${tag}>`).join('') + '</tr>';
+    });
+    tbl += '</table>';
+    return tbl;
+  });
+  // Unordered list items
+  h = h.replace(/^(\s*)[-*] (.+)$/gm, '$1<div style="display:flex;gap:6px;margin:2px 0;padding-left:8px"><span style="color:var(--amber);flex-shrink:0;margin-top:2px">·</span><span>$2</span></div>');
+  // Numbered list
+  h = h.replace(/^(\d+)\. (.+)$/gm, '<div style="display:flex;gap:6px;margin:3px 0"><span style="color:var(--amberl);flex-shrink:0;min-width:16px">$1.</span><span>$2</span></div>');
+  // Inline code
+  h = h.replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:2px;font-size:11px;color:var(--tealx)">$1</code>');
+  // Line breaks
+  h = h.replace(/\n\n+/g, '<div style="height:8px"></div>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+
+async function runFree(){
+  const txt = document.getElementById('free-ta').value.trim();
+  if (!txt){ notify('請先輸入內容'); return; }
+
+  let sys;
+  if (freeActivePreset === FREE_CHAR_PRESET_IDX) {
+    // 角色對白仿寫 mode — build system prompt from character fields
+    const name        = document.getElementById('free-char-name').value.trim() || '（未填）';
+    const personality = document.getElementById('free-char-personality').value.trim() || '（未填）';
+    const speech      = document.getElementById('free-char-speech').value.trim() || '（未填）';
+    const role        = document.getElementById('free-char-role').value.trim() || '（未填）';
+    const bg          = document.getElementById('free-char-bg').value.trim();
+    if (name === '（未填）') { notify('請填寫角色名'); return; }
+    sys = `你是專業遊戲／小說台詞寫手。請根據以下角色資料，參考用家提供的對白樣本，為這個角色生成 ${freeCharCount} 句全新台詞。
+
+角色資料：
+角色名：${name}
+性格：${personality}
+說話方式：${speech}
+身份：${role}${bg ? '\n背景：' + bg : ''}
+
+工作流程：
+1. 先從參考對白中判斷語氣、句長、慣用詞、禮貌程度、情緒密度與潛台詞習慣。
+2. 再用同樣的說話邏輯，而不是只抄表面句型，為此角色生成新台詞。
+
+硬性要求：
+- 優先保持角色辨識度，不追求空泛華麗。
+- 不可直接重複參考對白內容。
+- 不可讓台詞與角色身份、性格、背景衝突。
+- 不可把所有句子都寫成同一種情緒強度。
+- 若角色資料不足，保守處理，不可擅自新增世界觀設定。
+
+輸出要求：
+- 每句台詞用「」包裹
+- 每句台詞後附一行「✦ 語感說明：」解釋這句如何貼合角色
+- 用繁體中文回覆`;
+  } else {
+    const sysTa = document.getElementById('free-sys-ta').value.trim();
+    sys = sysTa || '你是一個專業的小說寫作助手，請根據用家的內容提供詳細有用的回覆，用繁體中文回答。';
+  }
+
+  try{
+    const raw = await callAI(sys, txt, '詢問中……', 4000);
+    document.getElementById('free-ct').textContent = '已回覆';
+    document.getElementById('free-result').innerHTML = `
+      <div class="ana-section">
+        <div class="ana-hd" style="justify-content:space-between">
+          <span>AI 回覆</span>
+          <button class="btn btn-g sm" onclick="document.getElementById('free-result').innerHTML='<div class=\\"empty\\"><div class=\\"eseal\\">問</div><p>輸入提示詞<br>自由詢問 AI</p></div>';document.getElementById('free-ct').textContent='待詢問'">清除</button>
+        </div>
+        <div class="ana-bd" style="line-height:2">${mdToHtml(raw)}</div>
+      </div>`;
+  }catch(e){ notify('詢問失敗：'+(e.message||e)); }
+}
+
+function freeClear(){
+  document.getElementById('free-ta').value='';
+  document.getElementById('free-sys-ta').value='';
+  document.getElementById('free-result').innerHTML='<div class="empty"><div class="eseal">問</div><p>輸入提示詞<br>自由詢問 AI</p></div>';
+  document.getElementById('free-ct').textContent='待詢問';
+  document.querySelectorAll('#free-preset-chips .chip').forEach(c=>c.classList.remove('on'));
+  freeActivePreset = -1;
+  document.getElementById('free-char-section').style.display='none';
+  document.getElementById('free-content-lbl').style.display='';
+  document.getElementById('free-sys-ta').style.display='';
+  document.getElementById('free-input-lbl').textContent='輸入內容';
+  document.getElementById('free-ta').placeholder='貼入文章、問題、要處理的內容……';
+}
+
+// ══════════════════════════════════════════
+// PAGE: 角色創作
+// ══════════════════════════════════════════
+const CC_DEFAULT_SCENES = ['召喚','勝利','戰鬥','落敗','特技釋放','好感對話','劇情過場'];
+let ccScenes = [];
+
+function initCCScenes(){
+  const chips = document.getElementById('cc-scene-chips');
+  if (!chips) return;
+  chips.innerHTML = CC_DEFAULT_SCENES.map(s=>
+    `<button class="chip" onclick="quickAddCCScene('${escA(s)}')">${escH(s)}</button>`
+  ).join('');
+}
+function quickAddCCScene(name){
+  if (ccScenes.find(s=>s.name===name)) return;
+  addCCScene(name);
+}
+function addCCScene(nameOverride){
+  const inp = document.getElementById('cc-scene-name');
+  const name = nameOverride || (inp ? inp.value.trim() : '');
+  if (!name){ notify('請輸入場景名稱'); return; }
+  if (ccScenes.find(s=>s.name===name)){ notify('場景已存在'); return; }
+  const idx = ccScenes.length;
+  ccScenes.push({ name, template:'' });
+  if (inp && !nameOverride) inp.value='';
+  renderCCSceneCards();
+}
+function removeCCScene(i){
+  ccScenes.splice(i,1);
+  renderCCSceneCards();
+}
+function renderCCSceneCards(){
+  const wrap = document.getElementById('cc-scenes');
+  wrap.innerHTML = ccScenes.map((s,i)=>`
+    <div style="background:var(--bg3);border:1px solid var(--line2);border-radius:2px;padding:8px 10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <span style="font-size:11px;color:var(--amberl);letter-spacing:1px">${escH(s.name)}</span>
+        <button class="chdel" onclick="removeCCScene(${i})">✕</button>
+      </div>
+      <textarea class="ta xs" style="min-height:50px" placeholder="（選填）貼入此場景的模板台詞，AI 會參考風格生成……" oninput="ccScenes[${i}].template=this.value">${escH(s.template)}</textarea>
+    </div>`).join('');
+}
+
+const CC_SYS=`你是專業遊戲/小說台詞設計師，擅長為角色生成有辨識度的台詞。
+
+角色資料：
+名字：{NAME}，性別：{GENDER}，性格：{PERSONALITY}，身份：{ROLE}，說話方式：{SPEECH}
+背景故事：{STORY}
+{REQ}
+
+任務：
+請為以下每個場景生成 4 句台詞選項。4 句必須代表不同策略，而不是只做表面換詞。
+
+四種方案方向：
+1. 直接版：最符合角色直覺反應。
+2. 克制版：情緒較收斂、較含蓄。
+3. 張力版：情緒或戲劇性較強。
+4. AI最佳版：由你判斷在此角色設定與場景下，最有戲、最自然、最值得採用的版本，不必拘泥於用家慣常風格。
+
+規則：
+1. 每句都必須像該角色真的會說出口。
+2. 不可加入與角色背景衝突的新設定。
+3. 不可只改語尾，四句必須有實際策略差異。
+4. 「為何這樣說」要解釋角色心理、場景壓力或語氣設計，不要只重述台詞字面意思。
+
+輸出純 JSON（無其他文字）：
+{"scenes":[{"scene":"場景名","lines":[{"label":"直接版","text":"台詞","reason":"這樣說的原因"},{"label":"克制版","text":"台詞","reason":"這樣說的原因"},{"label":"張力版","text":"台詞","reason":"這樣說的原因"},{"label":"AI最佳版","text":"台詞","reason":"這樣說的原因"}]}]}`;
+
+async function runCharCraft(){
+  const name=document.getElementById('cc-name').value.trim();
+  if(!name){notify('請填入角色名');return;}
+  if(!ccScenes.length){notify('請至少新增一個場景');return;}
+  const story=document.getElementById('cc-story').value.trim();
+  const req=document.getElementById('cc-req').value.trim();
+  const scenesStr=ccScenes.map(s=>`場景：${s.name}${s.template?`\n參考模板：${s.template}`:''}`).join('\n\n');
+  const sys=CC_SYS
+    .replace('{NAME}',name)
+    .replace('{GENDER}',document.getElementById('cc-gender').value||'未設定')
+    .replace('{PERSONALITY}',document.getElementById('cc-personality').value||'未設定')
+    .replace('{ROLE}',document.getElementById('cc-role').value||'未設定')
+    .replace('{SPEECH}',document.getElementById('cc-speech').value||'未設定')
+    .replace('{STORY}',story||'未提供')
+    .replace('{REQ}',req?`額外要求：${req}`:'');
+  try{
+    const raw=await callAI(sys,scenesStr,'生成台詞中……',3000);
+    let p;try{p=JSON.parse(raw);}catch(e){throw new Error('JSON解析失敗');}
+    renderCCResult(p, name);
+  }catch(e){notify('生成失敗：'+(e.message||e));}
+}
+
+function renderCCResult(d, name){
+  document.getElementById('cc-ct').textContent=`${(d.scenes||[]).length} 個場景`;
+  document.getElementById('cc-result').innerHTML=(d.scenes||[]).map(sc=>`
+    <div class="ana-section">
+      <div class="ana-hd">🎭 ${escH(sc.scene)}</div>
+      <div class="ana-bd" style="display:flex;flex-direction:column;gap:8px">
+        ${(sc.lines||[]).map((l,i)=>`
+          <div style="border-left:2px solid var(--amber);padding:6px 10px;background:rgba(200,120,10,0.04);border-radius:0 2px 2px 0">
+            ${l.label?`<div style="font-size:10px;color:var(--amberl);letter-spacing:1px;margin-bottom:4px">${escH(l.label)}</div>`:''}
+            <div style="font-size:13px;color:var(--ink);line-height:1.9;margin-bottom:4px;font-family:'Noto Serif TC',serif">「${escH(l.text||'')}」</div>
+            <div style="font-size:10px;color:var(--ink5);letter-spacing:1px">✦ ${escH(l.reason||'')}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// BOOK HEADER UPDATE (add new pages)
+// ══════════════════════════════════════════
+const _origSetCurBook = setCurBook;
+// patch setCurBook to also update new page headers
+const _patchedSetCurBook = function(id){
+  _origSetCurBook(id);
+  const book = getCurBook();
+  ['free','charcraft'].forEach(pg => {
+    const hdr = document.getElementById(pg+'-book-hdr');
+    if (!hdr) return;
+    if (book) {
+      hdr.style.display = 'flex';
+      hdr.innerHTML = `<div class="book-hdr-name">${escH(book.title)}</div>
+        <div class="book-hdr-meta">${escH(book.genre||'')} · ${{short:'短篇',mid:'中篇',long:'長篇'}[book.len]||''}</div>
+        <button class="btn btn-g sm" style="margin-left:auto" onclick="goPage('shelf')">換書</button>`;
+    } else {
+      hdr.style.display = 'none';
+    }
+  });
+};
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+renderShelf();
+renderProvConfig();
+setCurBook(null);
+initFreePresets();
+initCCScenes();
+// Restore provider tab UI
+document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('on',t.dataset.prov===curProvider));
+</script>
+</body>
+</html>
