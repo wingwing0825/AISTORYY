@@ -653,24 +653,33 @@ span.ann.lit{animation:litup 1.5s ease}
 <div class="page" id="page-rep">
   <div id="rep-book-hdr" class="book-hdr" style="display:none"></div>
   <div class="subtabs">
-    <button class="stab on" data-st="sr" onclick="setRepTab('sr')">?? ???</button>
-    <button class="stab" data-st="fr" onclick="setRepTab('fr')">?? ?冽???</button>
+    <button class="stab on" data-st="sr" onclick="setRepTab('sr')">逐句重複</button>
+    <button class="stab" data-st="fr" onclick="setRepTab('fr')">全文重複</button>
   </div>
   <!-- SR subtab -->
   <div id="rep-sr" style="display:flex;flex:1;overflow:hidden;flex-direction:column">
     <div class="split" style="flex:1;overflow:hidden">
       <div class="lpanel">
         <div class="farea" id="sr-input-area">
-          <textarea class="ta" id="sr-ta" placeholder="鞎澆畾菔嚗誑???嚗瑼Ｘ??折?銴??色?></textarea>
+          <textarea class="ta" id="sr-ta" placeholder="貼入文本，系統會檢查每一句內部的重複詞。"></textarea>
           <div class="brow">
-            <button class="btn btn-p" onclick="runSR()">?? ?瑼Ｘ</button>
-            <button class="btn btn-g sm" onclick="srClear()">皜征</button>
+            <button class="btn btn-p" onclick="runSR()">分析逐句重複</button>
+            <button class="btn btn-g sm" onclick="srClear()">清空</button>
           </div>
           <div class="ignore-area">
-            <div class="slbl">敹賜閰澈</div>
+            <div class="slbl">單字檢查詞</div>
+            <div style="font-size:10px;color:var(--ink5);line-height:1.8;margin-bottom:6px">預設不顯示任何單字重複。若你想特別檢查「將、就、可」這類單字連接詞，請在這裡加入。</div>
             <div class="ignore-row">
-              <input class="inp" id="sr-ignore-in" placeholder="靘?憟嫘???憪??舀???具?嚗???" onkeydown="if(event.key==='Enter')addIgnore('sr')">
-              <button class="btn btn-g sm" onclick="addIgnore('sr')">?</button>
+              <input class="inp" id="sr-allow-in" placeholder="輸入要檢查的單字，例如：將 就 可" onkeydown="if(event.key==='Enter')addAllowSingle('sr')">
+              <button class="btn btn-g sm" onclick="addAllowSingle('sr')">加入</button>
+            </div>
+            <div class="ignore-tags" id="sr-allow-tags"></div>
+          </div>
+          <div class="ignore-area">
+            <div class="slbl">忽略詞庫</div>
+            <div class="ignore-row">
+              <input class="inp" id="sr-ignore-in" placeholder="輸入要忽略的詞，可用空格或逗號分隔" onkeydown="if(event.key==='Enter')addIgnore('sr')">
+              <button class="btn btn-g sm" onclick="addIgnore('sr')">加入</button>
             </div>
             <div class="ignore-tags" id="sr-ignore-tags"></div>
           </div>
@@ -678,14 +687,14 @@ span.ann.lit{animation:litup 1.5s ease}
         <div id="sr-result" style="display:none;flex:1;flex-direction:column;overflow:hidden">
           <div class="rbar">
             <span style="font-size:11px;color:var(--ink5);letter-spacing:1px" id="sr-ct"></span>
-            <button class="btn btn-g sm" onclick="srBack()">???頛詨</button>
+            <button class="btn btn-g sm" onclick="srBack()">重新輸入</button>
           </div>
           <div class="farea" id="sr-sentences" style="gap:10px"></div>
         </div>
       </div>
       <div class="rpanel">
-        <div class="rhdr"><div class="rtitle">??閰絞閮?/div><div class="rct" id="sr-rct">敺炎??/div></div>
-        <div class="rlist" id="sr-rlist"><div class="empty"><div class="eseal">??/div><p>?瑼Ｘ<br>??折?銴?</p></div></div>
+        <div class="rhdr"><div class="rtitle">重複詞清單</div><div class="rct" id="sr-rct">待分析</div></div>
+        <div class="rlist" id="sr-rlist"><div class="empty"><div class="eseal">句</div><p>分析逐句重複後<br>這裡會列出重複詞</p></div></div>
       </div>
     </div>
   </div>
@@ -694,16 +703,25 @@ span.ann.lit{animation:litup 1.5s ease}
     <div class="split" style="flex:1;overflow:hidden">
       <div class="lpanel">
         <div class="farea" id="fr-input-area">
-          <textarea class="ta" id="fr-ta" placeholder="鞎澆?冽?嚗?????銴?嚗??砍摮??箇2甈∩誑銝璅?嚗色?></textarea>
+          <textarea class="ta" id="fr-ta" placeholder="貼入全文，系統會檢查全文重複詞。"></textarea>
           <div class="brow">
-            <button class="btn btn-p" onclick="runFR()">?? ?冽???</button>
-            <button class="btn btn-g sm" onclick="frClear()">皜征</button>
+            <button class="btn btn-p" onclick="runFR()">分析全文重複</button>
+            <button class="btn btn-g sm" onclick="frClear()">清空</button>
           </div>
           <div class="ignore-area">
-            <div class="slbl">敹賜閰澈</div>
+            <div class="slbl">單字檢查詞</div>
+            <div style="font-size:10px;color:var(--ink5);line-height:1.8;margin-bottom:6px">全文模式也預設不顯示任何單字重複。若你要特別檢查某些單字，請在這裡加入。</div>
             <div class="ignore-row">
-              <input class="inp" id="fr-ignore-in" placeholder="靘?憟嫘???憪??舀???具?嚗???" onkeydown="if(event.key==='Enter')addIgnore('fr')">
-              <button class="btn btn-g sm" onclick="addIgnore('fr')">?</button>
+              <input class="inp" id="fr-allow-in" placeholder="輸入要檢查的單字，例如：將 就 可" onkeydown="if(event.key==='Enter')addAllowSingle('fr')">
+              <button class="btn btn-g sm" onclick="addAllowSingle('fr')">加入</button>
+            </div>
+            <div class="ignore-tags" id="fr-allow-tags"></div>
+          </div>
+          <div class="ignore-area">
+            <div class="slbl">忽略詞庫</div>
+            <div class="ignore-row">
+              <input class="inp" id="fr-ignore-in" placeholder="輸入要忽略的詞，可用空格或逗號分隔" onkeydown="if(event.key==='Enter')addIgnore('fr')">
+              <button class="btn btn-g sm" onclick="addIgnore('fr')">加入</button>
             </div>
             <div class="ignore-tags" id="fr-ignore-tags"></div>
           </div>
@@ -711,21 +729,21 @@ span.ann.lit{animation:litup 1.5s ease}
         <div id="fr-result" style="display:none;flex:1;flex-direction:column;overflow:hidden">
           <div class="rbar">
             <span style="font-size:11px;color:var(--ink5)" id="fr-ct"></span>
-            <button class="btn btn-g sm" onclick="frBack()">???頛詨</button>
+            <button class="btn btn-g sm" onclick="frBack()">重新輸入</button>
           </div>
           <div class="ann-body" id="fr-body" style="flex:1"></div>
         </div>
       </div>
       <div class="rpanel">
-        <div class="rhdr"><div class="rtitle">??閰???/div><div class="rct" id="fr-rct">敺???/div></div>
+        <div class="rhdr"><div class="rtitle">重複詞清單</div><div class="rct" id="fr-rct">待分析</div></div>
         <div id="fr-rlist-wrap" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-          <div class="empty" id="fr-empty"><div class="eseal">??/div><p>???冽?<br>蝯梯???閰?/p></div>
+          <div class="empty" id="fr-empty"><div class="eseal">全</div><p>分析全文重複後<br>這裡會列出重複詞</p></div>
           <div style="display:none;flex:1;flex-direction:column;overflow:hidden" id="fr-cats">
             <div style="padding:8px 12px;border-bottom:1px solid var(--line);flex-shrink:0">
               <div class="chips">
-                <button class="chip on" id="fr-cat-hi" onclick="showFRCat('hi')">擃 ??甈?/button>
-                <button class="chip" id="fr-cat-md" onclick="showFRCat('md')">銝剝 4-7甈?/button>
-                <button class="chip" id="fr-cat-lo" onclick="showFRCat('lo')">雿 2-3甈?/button>
+                <button class="chip on" id="fr-cat-hi" onclick="showFRCat('hi')">高頻 8 次以上</button>
+                <button class="chip" id="fr-cat-md" onclick="showFRCat('md')">中頻 4-7 次</button>
+                <button class="chip" id="fr-cat-lo" onclick="showFRCat('lo')">低頻 2-3 次</button>
               </div>
             </div>
             <div class="rlist" id="fr-rlist"></div>
@@ -1924,24 +1942,37 @@ function getPOVDesc(){
 // IGNORE WORDS
 // ??????????????????????????????????????????
 let ignoreWords={sr:[],fr:[]};
-// Load from localStorage
-try{const saved=JSON.parse(localStorage.getItem('novelai_ignore')||'{}'); if(saved.sr)ignoreWords.sr=saved.sr; if(saved.fr)ignoreWords.fr=saved.fr;}catch(e){}
+let allowSingleWords={sr:[],fr:[]};
+try{
+  const savedIgnore=JSON.parse(localStorage.getItem('novelai_ignore')||'{}');
+  if(Array.isArray(savedIgnore.sr)) ignoreWords.sr=savedIgnore.sr;
+  if(Array.isArray(savedIgnore.fr)) ignoreWords.fr=savedIgnore.fr;
+}catch(e){}
+try{
+  const savedAllow=JSON.parse(localStorage.getItem('novelai_allow_single')||'{}');
+  if(Array.isArray(savedAllow.sr)) allowSingleWords.sr=savedAllow.sr;
+  if(Array.isArray(savedAllow.fr)) allowSingleWords.fr=savedAllow.fr;
+}catch(e){}
 function saveIgnore(){localStorage.setItem('novelai_ignore',JSON.stringify(ignoreWords));}
-
+function saveAllowSingle(){localStorage.setItem('novelai_allow_single',JSON.stringify(allowSingleWords));}
+function splitWordInput(raw){
+  return String(raw||'').split(/[、，,\s]+/).map(w=>w.trim()).filter(Boolean);
+}
 function addIgnore(ns){
   const inp=document.getElementById(ns+'-ignore-in');
-  const raw=(inp.value||'').trim();
-  if(!raw){return;}
-  // Support batch: split by ??, comma, space
-  const words = raw.split(/[??,\s]+/).map(w=>w.trim()).filter(w=>w);
+  const words=splitWordInput(inp?.value||'');
+  if(!words.length) return;
   let added=0;
   for(const w of words){
-    if(!ignoreWords[ns].includes(w)){ ignoreWords[ns].push(w); added++; }
+    if(!ignoreWords[ns].includes(w)){
+      ignoreWords[ns].push(w);
+      added++;
+    }
   }
-  inp.value='';
+  if(inp) inp.value='';
   saveIgnore();
   renderIgnoreTags(ns);
-  if(added>1) notify(`撌脣???${added} ?蕭?亥?`);
+  if(added>1) notify(`已加入 ${added} 個忽略詞`);
 }
 function removeIgnore(ns,w){
   ignoreWords[ns]=ignoreWords[ns].filter(x=>x!==w);
@@ -1949,7 +1980,7 @@ function removeIgnore(ns,w){
   renderIgnoreTags(ns);
 }
 function clearIgnore(ns){
-if(!confirm('確定要清空目前內容嗎？')) return;
+  if(!confirm('確定要清空目前的忽略詞嗎？')) return;
   ignoreWords[ns]=[];
   saveIgnore();
   renderIgnoreTags(ns);
@@ -1958,15 +1989,60 @@ function renderIgnoreTags(ns){
   const el=document.getElementById(ns+'-ignore-tags');
   if(!el) return;
   if(!ignoreWords[ns].length){
-    el.innerHTML='<span style="font-size:10px;color:var(--ink5);letter-spacing:1px">嚗??∪蕭?亥?嚗?/span>';
+    el.innerHTML='<span style="font-size:10px;color:var(--ink5);letter-spacing:1px">目前沒有忽略詞</span>';
     return;
   }
   el.innerHTML=ignoreWords[ns].map(w=>
-    `<span class="itag">${escH(w)}<button onclick="removeIgnore('${ns}','${escA(w)}')" title="蝘駁">??/button></span>`
-  ).join('')+`<button class="btn btn-g sm" style="font-size:9px;padding:2px 6px;margin-left:4px" onclick="clearIgnore('${ns}')">皜征</button>`;
+    `<span class="itag">${escH(w)}<button onclick="removeIgnore('${ns}','${escA(w)}')" title="移除">×</button></span>`
+  ).join('')+`<button class="btn btn-g sm" style="font-size:9px;padding:2px 6px;margin-left:4px" onclick="clearIgnore('${ns}')">清空</button>`;
 }
-// Init tags on load
-document.addEventListener('DOMContentLoaded',()=>{renderIgnoreTags('sr');renderIgnoreTags('fr');});
+function addAllowSingle(ns){
+  const inp=document.getElementById(ns+'-allow-in');
+  const words=splitWordInput(inp?.value||'').filter(w=>w.length===1);
+  if(!words.length){
+    notify('請輸入要檢查的單字');
+    return;
+  }
+  let added=0;
+  for(const w of words){
+    if(!allowSingleWords[ns].includes(w)){
+      allowSingleWords[ns].push(w);
+      added++;
+    }
+  }
+  if(inp) inp.value='';
+  saveAllowSingle();
+  renderAllowSingleTags(ns);
+  if(added>1) notify(`已加入 ${added} 個單字檢查詞`);
+}
+function removeAllowSingle(ns,w){
+  allowSingleWords[ns]=allowSingleWords[ns].filter(x=>x!==w);
+  saveAllowSingle();
+  renderAllowSingleTags(ns);
+}
+function clearAllowSingle(ns){
+  if(!confirm('確定要清空目前的單字檢查詞嗎？')) return;
+  allowSingleWords[ns]=[];
+  saveAllowSingle();
+  renderAllowSingleTags(ns);
+}
+function renderAllowSingleTags(ns){
+  const el=document.getElementById(ns+'-allow-tags');
+  if(!el) return;
+  if(!allowSingleWords[ns].length){
+    el.innerHTML='<span style="font-size:10px;color:var(--ink5);letter-spacing:1px">目前沒有指定單字，系統會自動忽略所有單字重複</span>';
+    return;
+  }
+  el.innerHTML=allowSingleWords[ns].map(w=>
+    `<span class="itag">${escH(w)}<button onclick="removeAllowSingle('${ns}','${escA(w)}')" title="移除">×</button></span>`
+  ).join('')+`<button class="btn btn-g sm" style="font-size:9px;padding:2px 6px;margin-left:4px" onclick="clearAllowSingle('${ns}')">清空</button>`;
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  renderIgnoreTags('sr');
+  renderIgnoreTags('fr');
+  renderAllowSingleTags('sr');
+  renderAllowSingleTags('fr');
+});
 
 // ??????????????????????????????????????????
 // POPUP
@@ -2710,15 +2786,15 @@ const SR_SYS=`雿???∪??～誑銝?畾萄歇璅?銵? [蝚
 
 async function runSR(){
   const txt=document.getElementById('sr-ta').value.trim();
-  if(!txt){notify('隢?頛詨??');return;}
+  if(!txt){notify('請先輸入文本');return;}
   const sentences=txt.split('\n').filter(s=>s.trim());
-  if(!sentences.length){notify('隢誑???');return;}
-  const ignore=ignoreWords.sr.join('??)||'??;
-  const numbered=sentences.map((s,i)=>`[蝚?{i+1}?包 ${s}`).join('\n');
+  if(!sentences.length){notify('請先輸入有效句子');return;}
+  const ignore=ignoreWords.sr.join('、')||'無';
+  const numbered=sentences.map((s,i)=>`[第${i+1}句] ${s}`).join('\n');
   try{
     const sys=SR_SYS.replace('{IGNORE}',ignore);
-    const raw=await callAI(sys,numbered,'???銝凌色?);
-    let p;try{p=JSON.parse(raw);}catch(e){throw new Error('JSON閫??憭望?');}
+    const raw=await callAI(sys,numbered,'分析逐句重複中…');
+    let p;try{p=JSON.parse(raw);}catch(e){throw new Error('JSON 解析失敗');}
     // Normalise: support both old string[] and new {word,suggestion}[] format
     const normalised = (p.results||[]).map(r => {
       const wordObjs = (r.words||[]).map(w => typeof w==='string' ? {word:w,suggestion:''} : w);
@@ -2727,12 +2803,14 @@ async function runSR(){
     // JS-level verification: only keep words that genuinely appear 2+ times in that sentence
     // AND are not in the ignore list
     const ignoreSet = new Set(ignoreWords.sr);
+    const allowSingleSet = new Set(allowSingleWords.sr);
     const verified = normalised.map(r => {
       const sent = sentences[r.sentence-1]||'';
       const validObjs = (r.wordObjs||[]).filter(wo => {
-        const w = wo.word||'';
+        const w = String(wo.word||'').trim();
         if(!w) return false;
         if(ignoreSet.has(w)) return false;
+        if(w.length===1 && !allowSingleSet.has(w)) return false;
         // Count non-overlapping occurrences in the sentence
         let count = 0, pos = 0;
         while((pos = sent.indexOf(w, pos)) !== -1){ count++; pos += w.length; }
@@ -2741,7 +2819,7 @@ async function runSR(){
       return {...r, wordObjs: validObjs};
     }).filter(r => r.wordObjs.length > 0);
     renderSR(sentences, verified);
-  }catch(err){notify('??憭望?嚗?+(err.message||err));}
+  }catch(err){notify('分析失敗：'+(err.message||err));}
 }
 
 function renderSR(sentences, results){
@@ -2752,8 +2830,8 @@ function renderSR(sentences, results){
   document.getElementById('sr-input-area').style.display='none';
   document.getElementById('sr-result').style.display='flex';
   const total = Object.values(repMap).reduce((s,ws)=>s+ws.length, 0);
-  document.getElementById('sr-ct').textContent=`??${sentences.length} ?伐?${total} ??銴?`;
-  document.getElementById('sr-rct').textContent=`${total} ?;
+  document.getElementById('sr-ct').textContent=`共 ${sentences.length} 句，找到 ${total} 個重複詞`;
+  document.getElementById('sr-rct').textContent=`${total} 個`;
 
   const div=document.getElementById('sr-sentences'); div.innerHTML='';
   sentences.forEach((sent,i)=>{
@@ -2786,7 +2864,7 @@ function renderSR(sentences, results){
     el.style.cssText='flex-shrink:0';
     el.innerHTML=`
       <div style="font-size:10px;color:var(--ink5);letter-spacing:1px;margin-bottom:3px">
-        蝚?${i+1} ??{wordObjs.length?` 繚 <span style="color:var(--redl)">${wordObjs.length} ??銴?/span>`:''}
+        第 ${i+1} 句 ${wordObjs.length?`｜ <span style="color:var(--redl)">${wordObjs.length} 個重複詞</span>`:''}
       </div>
       <div style="background:var(--bg3);border:1px solid var(--line);border-radius:2px;padding:7px 10px;font-size:13px;line-height:2">${html}</div>
       ${wordObjs.map(wo=>wo.suggestion?`
@@ -2795,9 +2873,9 @@ function renderSR(sentences, results){
           onmouseleave="this.style.borderColor='var(--line2)';this.style.color='var(--ink4)'"
           onclick="srApplySug(this,${i},'${escA(wo.word)}','${escA(wo.suggestion)}')">
           <span style="color:var(--redl);text-decoration:line-through">${escH(wo.word)}</span>
-          <span style="color:var(--ink5)">??/span>
+          <span style="color:var(--ink5)">→</span>
           <span style="color:var(--tealx)">${escH(wo.suggestion)}</span>
-          <span style="margin-left:auto;font-size:10px;color:var(--ink5)">暺??踵?蝚砌???/span>
+          <span style="margin-left:auto;font-size:10px;color:var(--ink5)">點擊套用到第二次出現</span>
         </div>`:''
       ).join('')}`;
     div.appendChild(el);
@@ -2813,11 +2891,11 @@ function renderSR(sentences, results){
           <div class="wct">${escH(w)}</div>
           <div class="winfo">
             <div class="wtxt">${escH(w)}</div>
-            <div class="wcnt" id="srwcnt-${escA(w)}">?箇??${matchSents.length} ?乓暺?頝唾?</div>
+            <div class="wcnt" id="srwcnt-${escA(w)}">出現在 ${matchSents.length} 句，點擊跳轉</div>
           </div>
         </div>`;
       }).join('')
-    : '<div class="empty"><p>???⊿?銴?</p></div>';
+    : '<div class="empty"><p>沒有重複詞</p></div>';
 }
 
 function srApplySug(el, sentIdx, word, sug){
@@ -2836,9 +2914,9 @@ function srApplySug(el, sentIdx, word, sug){
   const ta=document.getElementById('sr-ta');
   if(ta) ta.value=sentences.join('\n');
   // Visual feedback
-  el.innerHTML=`<span style="color:var(--tealx)">??撌脫??{escH(word)}????{escH(sug)}??/span>`;
+  el.innerHTML=`<span style="color:var(--tealx)">已套用：${escH(word)} → ${escH(sug)}</span>`;
   el.style.pointerEvents='none'; el.style.opacity='0.6';
-  notify('??撌脫??);
+  notify('已套用建議');
 }
 const _srJumpMap={};
 function srJumpWord(word){
@@ -2859,7 +2937,7 @@ function srJumpWord(word){
   }
   _srJumpMap[word]=(idx+1)%allSpans.length;
   const cntEl=document.getElementById('srwcnt-'+word);
-  if(cntEl) cntEl.textContent=`?箇 ${allSpans.length} 甈?繚 蝚?${idx+1} ?;
+  if(cntEl) cntEl.textContent=`共 ${allSpans.length} 次，目前跳到第 ${idx+1} 次`;
 }
 function srBack(){
   document.getElementById('sr-input-area').style.display='flex';
@@ -2913,18 +2991,19 @@ function buildCompareHtml(orig, revised, leftTitle='??', rightTitle='?孵?'){
 let frWords={hi:[],md:[],lo:[]};
 async function runFR(){
   const txt=document.getElementById('fr-ta').value.trim();
-  if(!txt){notify('隢?頛詨??');return;}
+  if(!txt){notify('請先輸入全文');return;}
   const ignore=new Set(ignoreWords.fr);
+  const allowSingle=new Set(allowSingleWords.fr);
   const wordCount=new Map();
 
-  // ?? Single characters (1 char) ??
+  // 單字只檢查使用者明確指定的白名單
   for(let i=0;i<txt.length;i++){
     const w=txt[i];
-    if(/[\u4e00-\u9fff]/.test(w)&&!ignore.has(w))
+    if(/[\u4e00-\u9fff]/.test(w) && allowSingle.has(w) && !ignore.has(w))
       wordCount.set(w,(wordCount.get(w)||0)+1);
   }
 
-  // ?? Multi-char words (2?? chars) ??
+  // 多字詞照常統計
   for(let len=2;len<=6;len++){
     for(let i=0;i<=txt.length-len;i++){
       const w=txt.slice(i,i+len);
@@ -2938,12 +3017,9 @@ async function runFR(){
     .filter(([,c])=>c>=2)
     .sort((a,b)=>b[1]-a[1]);
 
-  // Dedup: for multi-char words, if a shorter word is fully contained in a longer word
-  // that appears the SAME number of times, hide the shorter one (it's just part of the longer)
-  // But keep single chars always ??they can coexist with multi-char words
+  // 去除被更長詞完全覆蓋的較短詞；單字只有在白名單中才保留
   const filtered = candidates.filter(([w,c])=>{
-    if(w.length===1) return true; // always keep single chars
-    // Remove if a longer word contains this word AND appears nearly as often (within 1)
+    if(w.length===1) return allowSingle.has(w) && !ignore.has(w);
     return !candidates.some(([w2,c2])=>w2!==w && w2.length>w.length && w2.includes(w) && c2>=c-1);
   });
 
@@ -2956,8 +3032,8 @@ async function runFR(){
   const total=filtered.length;
   document.getElementById('fr-input-area').style.display='none';
   document.getElementById('fr-result').style.display='flex';
-  document.getElementById('fr-ct').textContent=`??${total} ??銴?`;
-  document.getElementById('fr-rct').textContent=`${total} ?;
+  document.getElementById('fr-ct').textContent=`共找到 ${total} 個全文重複詞`;
+  document.getElementById('fr-rct').textContent=`${total} 個`;
   document.getElementById('fr-empty').style.display='none';
   document.getElementById('fr-cats').style.display='flex';
   showFRCat('hi');
@@ -2974,11 +3050,11 @@ function showFRCat(cat){
         <div class="wct">${escH(w)}</div>
         <div class="winfo">
           <div class="wtxt">${escH(w)}</div>
-          <div class="wcnt" id="fwcnt-${escA(w)}">?箇 ${c} 甈～暺?頝唾?</div>
+          <div class="wcnt" id="fwcnt-${escA(w)}">出現 ${c} 次，點擊跳轉</div>
         </div>
         <span class="wbadge ${cat==='hi'?'hi':cat==='md'?'md':'lo'}">${cat==='hi'?'擃':cat==='md'?'銝剝':'雿'}</span>
       </div>`).join('')
-    :'<div class="empty" style="flex:none;padding:16px"><p>甇日畾萇閰?/p></div>';
+    :'<div class="empty" style="flex:none;padding:16px"><p>這個頻段目前沒有重複詞</p></div>';
 }
 // Track which occurrence index we're currently at per word
 const _frJumpIdx={};
